@@ -232,14 +232,14 @@ function AssignmentCard({ assignment, tab, submitted, onClick }: { assignment: A
       <div className="my-5 border-t border-slate-100" />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="text-sm text-slate-700">
-          <p className="font-medium">Pertemuan Sesi</p>
-          <p className="mt-1">{formatDate(assignment.deadline)}</p>
-          <p>07:00 s/d 08:40</p>
+          <p className="font-semibold text-slate-800">Start Date</p>
+          <p className="mt-1">{formatDate(assignment.publishAt ?? assignment.deadline)}</p>
+          <p>{formatTime(assignment.publishAt ?? assignment.deadline)}</p>
         </div>
         <div className="text-sm text-slate-700">
           <p className="flex items-center gap-2 font-semibold text-blue-600"><CalendarCheck className="h-4 w-4" />Due Date</p>
           <p className="mt-1">{assignment.deadline ? formatDate(assignment.deadline) : "No Due Date"}</p>
-          {assignment.deadline && <p className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />23:59</p>}
+          {assignment.deadline && <p className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formatTime(assignment.deadline)}</p>}
         </div>
       </div>
     </button>
@@ -288,24 +288,42 @@ function AssignmentDetailPage({
       />
       <div className="grid gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
-          <Card>
-            <h2 className="text-xl font-bold text-slate-800">{assignment.title}</h2>
-            <div className="mt-5 flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">{assignment.teacherName?.[0] ?? "G"}</span>
-              <div>
-                <p className="font-semibold text-slate-800">{assignment.teacherName || "-"}</p>
-                <p className="text-sm text-slate-500">{formatDate(assignment.deadline)}</p>
+          <Card className="overflow-hidden p-0">
+            <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50 to-white p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <Badge status={isDeadlineClosed ? "closed" : assignment.status} />
+                  <h2 className="mt-3 text-2xl font-bold text-slate-900">{assignment.title}</h2>
+                  <p className="mt-2 text-sm font-medium uppercase tracking-wide text-slate-500">{assignment.subjectName} | {assignment.className}</p>
+                </div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm">
+                  <ClipboardList className="h-4 w-4" />Assignment
+                </span>
               </div>
             </div>
-            <div className="my-5 border-t border-slate-100" />
-            <p className="text-sm leading-6 text-slate-600">{assignment.description || "Tidak ada deskripsi tugas."}</p>
-            <dl className="mt-8 grid gap-5 sm:grid-cols-2">
-              <DetailItem icon={CalendarCheck} label="Start Date" value={formatDate(assignment.deadline)} helper="07:00" />
-              <DetailItem icon={CalendarCheck} label="Due Date" value={assignment.deadline ? formatDate(assignment.deadline) : "no due date"} helper="23:59" />
-            </dl>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {assignment.linkUrl && <OpenButton href={assignment.linkUrl} label="Buka Link Tugas" />}
-              {assignment.fileUrl && <OpenButton href={assignment.fileUrl} label="Buka File Tugas" />}
+            <div className="p-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">{assignment.teacherName?.[0] ?? "G"}</span>
+                <div>
+                  <p className="font-semibold text-slate-800">{assignment.teacherName || "-"}</p>
+                  <p className="text-sm text-slate-500">Dipublish {formatDate(assignment.publishAt ?? assignment.deadline)} pukul {formatTime(assignment.publishAt ?? assignment.deadline)}</p>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-xl bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-700">Instruksi Tugas</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{assignment.description || "Tidak ada deskripsi tugas."}</p>
+              </div>
+
+              <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+                <DetailItem icon={CalendarCheck} label="Start Date" value={formatDate(assignment.publishAt ?? assignment.deadline)} helper={formatTime(assignment.publishAt ?? assignment.deadline)} />
+                <DetailItem icon={CalendarCheck} label="Due Date" value={assignment.deadline ? formatDate(assignment.deadline) : "no due date"} helper={assignment.deadline ? formatTime(assignment.deadline) : "-"} />
+              </dl>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                {assignment.linkUrl && <OpenButton href={assignment.linkUrl} label="Buka Link Tugas" />}
+                {assignment.fileUrl ? <OpenButton href={assignment.fileUrl} label="Buka File Tugas" /> : assignment.filePath ? <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">File belum bisa dibuka. Pastikan bucket assignment-files sudah dibuat di Supabase.</p> : null}
+              </div>
             </div>
           </Card>
 
@@ -408,7 +426,7 @@ function AssignmentDetailPage({
 
 function DetailItem({ icon: Icon, label, value, helper }: { icon: typeof CalendarCheck; label: string; value: string; helper: string }) {
   return (
-    <div className="text-sm text-slate-700">
+    <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
       <p className="flex items-center gap-2 font-semibold text-slate-800"><Icon className="h-4 w-4 text-blue-600" />{label}</p>
       <p className="mt-4">{value}</p>
       <p className="mt-1 flex items-center gap-1 text-slate-500"><Clock className="h-3.5 w-3.5" />{helper}</p>
@@ -434,4 +452,11 @@ function isLate(deadline: string) {
 function isPublished(publishAt?: string) {
   if (!publishAt) return true;
   return new Date(publishAt).getTime() <= Date.now();
+}
+
+function formatTime(value?: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date).replace(".", ":");
 }

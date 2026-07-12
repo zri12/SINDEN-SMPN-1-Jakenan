@@ -1,4 +1,5 @@
 import type { Assignment } from "@/types/assignment";
+import { createSignedUrl } from "@/lib/storage";
 import { getSupabase, handleSupabaseError } from "./serviceUtils";
 
 export async function getAssignments() {
@@ -10,7 +11,7 @@ export async function getAssignments() {
     .select("*, teachers(full_name), classes(name), subjects(name)")
     .order("created_at", { ascending: false });
   if (error) handleSupabaseError(error, "Data tugas gagal dimuat.");
-  return (data ?? []).map(mapAssignment);
+  return Promise.all((data ?? []).map(mapAssignment));
 }
 
 export async function createAssignment(assignment: Assignment) {
@@ -40,7 +41,10 @@ export async function deleteAssignment(id: string) {
   return { id };
 }
 
-function mapAssignment(row: any): Assignment {
+async function mapAssignment(row: any): Promise<Assignment> {
+  const filePath = row.assignment_file_path ?? undefined;
+  const signedFileUrl = filePath ? await getSafeAssignmentFileUrl(filePath) : undefined;
+
   return {
     id: row.id,
     teacherId: row.teacher_id,
@@ -51,14 +55,22 @@ function mapAssignment(row: any): Assignment {
     subjectName: row.subjects?.name ?? "-",
     title: row.title,
     description: row.description ?? "",
-    fileUrl: row.assignment_file_url ?? undefined,
-    filePath: row.assignment_file_path ?? undefined,
+    fileUrl: signedFileUrl ?? row.assignment_file_url ?? undefined,
+    filePath,
     linkUrl: row.assignment_link_url ?? undefined,
     publishAt: row.publish_at ?? row.created_at ?? undefined,
     deadline: row.deadline ?? "",
     status: row.status === "closed" ? "closed" : row.status === "archived" ? "closed" : "active",
     submittedCount: row.submitted_count ?? 0
   };
+}
+
+async function getSafeAssignmentFileUrl(path: string) {
+  try {
+    return await createSignedUrl("assignment-files", path, 60 * 60);
+  } catch {
+    return undefined;
+  }
 }
 
 function toAssignmentRow(assignment: Partial<Assignment>) {
