@@ -23,6 +23,11 @@ create policy "teacher_classes_teacher_delete_own" on public.teacher_classes
 for delete
 using (teacher_id = public.get_current_teacher_id());
 
+drop policy if exists "teachers_insert_own_profile" on public.teachers;
+create policy "teachers_insert_own_profile" on public.teachers
+for insert
+with check (profile_id = auth.uid());
+
 insert into public.profiles (id, full_name, username, role, phone, is_active)
 values
   ('9938c4c5-1bba-4e53-8de2-97489c1255d7', 'Administrator', 'admin', 'admin', '081234567800', true),
