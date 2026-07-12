@@ -88,6 +88,10 @@ export function MyAssignments() {
 
   const submitAssignment = async () => {
     if (!selected || !currentStudent) return;
+    if (!currentStudent.id || !currentStudent.classId) {
+      setSubmitError("Data siswa belum terhubung ke kelas. Jalankan seed SQL terbaru atau perbaiki data siswa di admin.");
+      return;
+    }
     if (isLate(selected.deadline)) {
       setSubmitError("Deadline tugas sudah berakhir. Jawaban tidak bisa dikirim lagi.");
       return;
@@ -130,7 +134,8 @@ export function MyAssignments() {
       setSelected(null);
       setActiveTab("submitted");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Pengumpulan tugas gagal dikirim.");
+      const message = err instanceof Error ? err.message : "Pengumpulan tugas gagal dikirim.";
+      setSubmitError(message.includes("row-level security") ? "Akses submit ditolak Supabase. Jalankan supabase/fix_submission_rls.sql, lalu coba lagi." : message);
     } finally {
       setIsSubmitting(false);
     }
