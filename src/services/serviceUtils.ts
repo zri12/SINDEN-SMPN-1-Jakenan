@@ -8,6 +8,11 @@ export function handleSupabaseError(error: unknown, fallbackMessage: string): ne
   if (error instanceof Error) {
     throw new Error(error.message);
   }
+  if (error && typeof error === "object" && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? fallbackMessage);
+    const code = "code" in error ? String((error as { code?: unknown }).code ?? "") : "";
+    throw new Error(code ? `${message} (${code})` : message);
+  }
   throw new Error(fallbackMessage);
 }
 

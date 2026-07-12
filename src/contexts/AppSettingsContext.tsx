@@ -13,6 +13,8 @@ const fallbackSettings: AppSettings = {
   defaultKkm: 75
 };
 
+const SETTINGS_CACHE_KEY = "sinden_app_settings";
+
 interface AppSettingsContextValue {
   settings: AppSettings;
   isLoading: boolean;
@@ -24,7 +26,7 @@ interface AppSettingsContextValue {
 const AppSettingsContext = createContext<AppSettingsContextValue | null>(null);
 
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>(fallbackSettings);
+  const [settings, setSettings] = useState<AppSettings>(() => getCachedSettings() ?? fallbackSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,10 +36,13 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     try {
       const result = await getSettings();
       setSettings(result);
+      cacheSettings(result);
       applyDocumentSettings(result);
     } catch (err) {
+      const cached = getCachedSettings() ?? fallbackSettings;
       setError(err instanceof Error ? err.message : "Pengaturan gagal dimuat.");
-      applyDocumentSettings(fallbackSettings);
+      setSettings(cached);
+      applyDocumentSettings(cached);
     } finally {
       setIsLoading(false);
     }
@@ -46,6 +51,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const saveSettings = useCallback(async (payload: Partial<AppSettings>) => {
     const result = await updateSettings({ ...settings, ...payload });
     setSettings(result);
+    cacheSettings(result);
     applyDocumentSettings(result);
     return result;
   }, [settings]);
@@ -61,6 +67,22 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   );
 
   return <AppSettingsContext.Provider value={value}>{children}</AppSettingsContext.Provider>;
+}
+
+function getCachedSettings() {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SETTINGS_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as AppSettings) : null;
+  } catch {
+    localStorage.removeItem(SETTINGS_CACHE_KEY);
+    return null;
+  }
+}
+
+function cacheSettings(settings: AppSettings) {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(settings));
 }
 
 export function useAppSettings() {

@@ -8,9 +8,10 @@ import type { Role } from "@/types/auth";
 interface SidebarProps {
   role: Role;
   onLogout: () => void;
+  onNavigate?: () => void;
 }
 
-export function Sidebar({ role, onLogout }: SidebarProps) {
+export function Sidebar({ role, onLogout, onNavigate }: SidebarProps) {
   const menus = menusByRole[role];
   const { settings } = useAppSettings();
 
@@ -49,6 +50,7 @@ export function Sidebar({ role, onLogout }: SidebarProps) {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={onNavigate}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
                     isActive ? "bg-blue-600 font-semibold text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
@@ -70,7 +72,10 @@ export function Sidebar({ role, onLogout }: SidebarProps) {
 
       <div className="border-t border-white/10 p-3">
         <button
-          onClick={onLogout}
+          onClick={() => {
+            onNavigate?.();
+            onLogout();
+          }}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/65 transition hover:bg-red-500/15 hover:text-red-100"
         >
           <LogOut className="h-4 w-4" />
