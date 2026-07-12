@@ -3,6 +3,9 @@ import { NavLink } from "react-router-dom";
 import { useAppSettings } from "@/contexts/AppSettingsContext";
 import { menusByRole } from "@/constants/menus";
 import { roleAvatars, roleLabels } from "@/constants/roles";
+import { ROUTES } from "@/constants/routes";
+import { useAssignments } from "@/hooks/useAssignments";
+import { useSubmissions } from "@/hooks/useSubmissions";
 import type { AuthUser, Role } from "@/types/auth";
 
 interface SidebarProps {
@@ -15,7 +18,13 @@ interface SidebarProps {
 export function Sidebar({ role, user, onLogout, onNavigate }: SidebarProps) {
   const menus = menusByRole[role];
   const { settings } = useAppSettings();
+  const { assignments } = useAssignments();
+  const { submissions } = useSubmissions();
   const displayName = user.username || user.email?.split("@")[0] || user.fullName;
+  const pendingAssignmentCount =
+    role === "student"
+      ? assignments.filter((assignment) => !submissions.some((submission) => submission.assignmentId === assignment.id)).length
+      : 0;
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-sinden-sidebar text-white">
@@ -63,6 +72,11 @@ export function Sidebar({ role, user, onLogout, onNavigate }: SidebarProps) {
                   <>
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="flex-1">{item.label}</span>
+                    {item.path === ROUTES.student.assignments && pendingAssignmentCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold leading-none text-white">
+                        {pendingAssignmentCount > 99 ? "99+" : pendingAssignmentCount}
+                      </span>
+                    )}
                     {isActive && <ChevronRight className="h-4 w-4" />}
                   </>
                 )}
