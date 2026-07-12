@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Eye, EyeOff, GraduationCap, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { useAppSettings } from "@/contexts/AppSettingsContext";
@@ -45,45 +45,18 @@ export function LoginPage() {
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_560px]">
         <section className="relative hidden overflow-hidden bg-[linear-gradient(135deg,#15386f_0%,#245bd7_48%,#2e6cf4_100%)] text-white lg:block">
           <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(255,255,255,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.18)_1px,transparent_1px)] [background-size:44px_44px]" />
-          <div className="login-float absolute left-16 top-20 h-28 w-28 rounded-[28px] border border-white/15 bg-white/10 backdrop-blur-sm" />
-          <div className="login-float-delayed absolute bottom-20 right-20 h-36 w-36 rounded-[32px] border border-white/15 bg-white/10 backdrop-blur-sm" />
+          <div className="login-float absolute left-24 top-24 h-24 w-24 rounded-[26px] border border-white/12 bg-white/10 backdrop-blur-sm" />
+          <div className="login-float-delayed absolute bottom-24 right-24 h-28 w-28 rounded-[30px] border border-white/12 bg-white/10 backdrop-blur-sm" />
 
-          <div className="relative z-10 flex min-h-screen flex-col justify-between px-16 py-12">
-            <div className="login-fade-down flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-                {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo sekolah" className="h-8 w-8 object-contain" /> : <GraduationCap className="h-6 w-6" />}
+          <div className="relative z-10 flex min-h-screen items-center justify-center px-16 py-12 text-center">
+            <div className="login-fade-up flex max-w-3xl flex-col items-center">
+              <div className="mb-8 flex h-28 w-28 items-center justify-center rounded-[30px] bg-white/16 text-white shadow-2xl shadow-blue-950/20 ring-1 ring-white/18 backdrop-blur">
+                {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo sekolah" className="h-16 w-16 object-contain" /> : <GraduationCap className="h-14 w-14" />}
               </div>
-              <div>
-                <p className="text-sm font-semibold leading-tight">{settings.appName}</p>
-                <p className="text-xs text-white/60">{settings.schoolName}</p>
-              </div>
-            </div>
 
-            <div className="login-fade-up max-w-2xl">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm text-white/80 backdrop-blur">
-                <Sparkles className="h-4 w-4" />
-                Portal akademik sekolah
-              </div>
-              <h1 className="max-w-xl text-6xl font-bold leading-[1.02] tracking-normal">{settings.appName}</h1>
-              <p className="mt-5 max-w-xl text-xl leading-8 text-white/82">{settings.appSubtitle}</p>
-
-              <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
-                {[
-                  ["Admin", "Kelola data"],
-                  ["Guru", "Tugas & nilai"],
-                  ["Siswa", "Belajar aktif"]
-                ].map(([title, caption], index) => (
-                  <div key={title} className="login-stagger rounded-2xl border border-white/14 bg-white/10 p-4 backdrop-blur" style={{ animationDelay: `${260 + index * 90}ms` }}>
-                    <p className="text-sm font-semibold">{title}</p>
-                    <p className="mt-1 text-xs text-white/60">{caption}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="login-fade-up flex items-center gap-3 text-sm text-white/65">
-              <ShieldCheck className="h-4 w-4" />
-              Akses role otomatis dari profil pengguna.
+              <h1 className="text-6xl font-bold leading-none tracking-normal xl:text-7xl">{settings.appName}</h1>
+              <p className="mt-6 max-w-2xl text-2xl font-medium leading-9 text-white/90">{settings.appSubtitle}</p>
+              <p className="mt-3 text-base text-white/65">{settings.schoolName}</p>
             </div>
           </div>
         </section>
@@ -146,10 +119,6 @@ export function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 flex items-center justify-center gap-2 text-center text-xs text-slate-400">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Role dibaca otomatis dari tabel profiles setelah login.
-            </div>
           </div>
         </section>
       </div>
