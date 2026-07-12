@@ -1,0 +1,75 @@
+import { dummyAssignments } from "@/data/dummyAssignments";
+import type { Assignment } from "@/types/assignment";
+import { getSupabase, handleSupabaseError } from "./serviceUtils";
+
+export async function getAssignments() {
+  const client = getSupabase();
+  if (!client) return dummyAssignments;
+
+  const { data, error } = await client
+    .from("assignments")
+    .select("*, teachers(full_name), classes(name), subjects(name)")
+    .order("created_at", { ascending: false });
+  if (error) handleSupabaseError(error, "Data tugas gagal dimuat.");
+  return (data ?? []).map(mapAssignment);
+}
+
+export async function createAssignment(assignment: Assignment) {
+  const client = getSupabase();
+  if (!client) return assignment;
+
+  const { data, error } = await client.from("assignments").insert(toAssignmentRow(assignment)).select("*, teachers(full_name), classes(name), subjects(name)").single();
+  if (error) handleSupabaseError(error, "Tugas gagal disimpan.");
+  return mapAssignment(data);
+}
+
+export async function updateAssignment(id: string, assignment: Partial<Assignment>) {
+  const client = getSupabase();
+  if (!client) return { id, ...assignment };
+
+  const { data, error } = await client.from("assignments").update(toAssignmentRow(assignment)).eq("id", id).select("*, teachers(full_name), classes(name), subjects(name)").single();
+  if (error) handleSupabaseError(error, "Tugas gagal diperbarui.");
+  return mapAssignment(data);
+}
+
+export async function deleteAssignment(id: string) {
+  const client = getSupabase();
+  if (!client) return { id };
+
+  const { error } = await client.from("assignments").delete().eq("id", id);
+  if (error) handleSupabaseError(error, "Tugas gagal dihapus.");
+  return { id };
+}
+
+function mapAssignment(row: any): Assignment {
+  return {
+    id: row.id,
+    teacherId: row.teacher_id,
+    teacherName: row.teachers?.full_name ?? "-",
+    classId: row.class_id,
+    className: row.classes?.name ?? "-",
+    subjectId: row.subject_id,
+    subjectName: row.subjects?.name ?? "-",
+    title: row.title,
+    description: row.description ?? "",
+    fileUrl: row.assignment_file_url ?? undefined,
+    linkUrl: row.assignment_link_url ?? undefined,
+    deadline: row.deadline ?? "",
+    status: row.status === "closed" ? "closed" : row.status === "archived" ? "closed" : "active",
+    submittedCount: row.submitted_count ?? 0
+  };
+}
+
+function toAssignmentRow(assignment: Partial<Assignment>) {
+  return {
+    teacher_id: assignment.teacherId,
+    class_id: assignment.classId,
+    subject_id: assignment.subjectId,
+    title: assignment.title,
+    description: assignment.description,
+    assignment_file_url: assignment.fileUrl,
+    assignment_link_url: assignment.linkUrl,
+    deadline: assignment.deadline,
+    status: assignment.status === "late" ? "active" : assignment.status
+  };
+}

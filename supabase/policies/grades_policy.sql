@@ -1,0 +1,2 @@
+-- TODO: enable RLS and add policies.
+-- Admin: all grades. Teacher: taught classes/mapel. Student: own grades.

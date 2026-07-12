@@ -1,0 +1,82 @@
+import { ChevronRight, GraduationCap, LogOut } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { useAppSettings } from "@/contexts/AppSettingsContext";
+import { menusByRole } from "@/constants/menus";
+import { roleAvatars, roleLabels } from "@/constants/roles";
+import type { Role } from "@/types/auth";
+
+interface SidebarProps {
+  role: Role;
+  onLogout: () => void;
+}
+
+export function Sidebar({ role, onLogout }: SidebarProps) {
+  const menus = menusByRole[role];
+  const { settings } = useAppSettings();
+
+  return (
+    <aside className="flex h-full w-60 shrink-0 flex-col bg-sinden-sidebar text-white">
+      <div className="border-b border-white/10 px-5 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
+            {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo sekolah" className="h-7 w-7 object-contain" /> : <GraduationCap className="h-6 w-6" />}
+          </div>
+          <div>
+            <p className="font-bold leading-tight">{settings.appName}</p>
+            <p className="text-xs text-white/55">{settings.schoolName}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-white/10 px-5 py-3">
+        <div className="flex items-center gap-3 rounded-lg bg-white/10 px-3 py-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold">
+            {roleAvatars[role]}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{roleLabels[role]}</p>
+            <p className="truncate text-xs text-white/50">{role === "admin" ? "admin@smp1jakenan.sch.id" : role === "teacher" ? "Guru Mata Pelajaran" : "Ahmad Fauzan - 7A"}</p>
+          </div>
+        </div>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/35">Menu Utama</p>
+        <div className="space-y-1">
+          {menus.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                    isActive ? "bg-blue-600 font-semibold text-white" : "text-white/75 hover:bg-white/10 hover:text-white"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    {isActive && <ChevronRight className="h-4 w-4" />}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div className="border-t border-white/10 p-3">
+        <button
+          onClick={onLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/65 transition hover:bg-red-500/15 hover:text-red-100"
+        >
+          <LogOut className="h-4 w-4" />
+          Keluar
+        </button>
+      </div>
+    </aside>
+  );
+}
