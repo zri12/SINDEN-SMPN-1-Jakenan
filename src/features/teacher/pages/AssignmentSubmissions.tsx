@@ -11,12 +11,15 @@ import { Select } from "@/components/common/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SubmissionTable } from "@/components/tables/SubmissionTable";
 import { useSubmissions } from "@/hooks/useSubmissions";
+import { createGrade } from "@/services/gradeService";
 import type { Submission } from "@/types/submission";
 
 export function AssignmentSubmissions() {
   const { submissions, isLoading, error } = useSubmissions();
   const [selected, setSelected] = useState<Submission | null>(null);
   const [scores, setScores] = useState<Record<string, { score: string; type: string; note: string }>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const currentScore = selected ? scores[selected.id] ?? { score: "", type: "tugas", note: "" } : { score: "", type: "tugas", note: "" };
   const canGrade = selected?.status === "submitted" || selected?.status === "late";
 
@@ -26,6 +29,35 @@ export function AssignmentSubmissions() {
       ...items,
       [selected.id]: { ...currentScore, ...value }
     }));
+  };
+
+  const saveGrade = async () => {
+    if (!selected || !currentScore.score) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await createGrade({
+        id: crypto.randomUUID(),
+        studentId: selected.studentId,
+        studentName: selected.studentName,
+        teacherId: selected.teacherId ?? "",
+        teacherName: "",
+        classId: selected.classId ?? "",
+        className: selected.className,
+        subjectId: selected.subjectId ?? "",
+        subjectName: selected.subjectName ?? "",
+        semester: "genap",
+        gradeType: currentScore.type as any,
+        score: Number(currentScore.score),
+        kkm: selected.kkm ?? 75,
+        note: currentScore.note
+      });
+      setSelected(null);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Nilai gagal disimpan.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -50,7 +82,7 @@ export function AssignmentSubmissions() {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-slate-900">File / Link Pengumpulan</h3>
-                  <p className="text-sm text-slate-500">Preview dummy untuk file, gambar, atau link jawaban siswa.</p>
+                  <p className="text-sm text-slate-500">Buka file, gambar, atau link jawaban siswa dari data pengumpulan.</p>
                 </div>
                 <Badge status={selected.status} />
               </div>
@@ -71,7 +103,7 @@ export function AssignmentSubmissions() {
             <section className="rounded-xl border border-blue-100 bg-blue-50 p-4">
               <div className="mb-4">
                 <h3 className="font-semibold text-blue-950">Input Nilai Tugas</h3>
-                <p className="text-sm text-blue-800">Nilai disimpan sementara di tampilan dummy. Saat Supabase aktif, nilai ini masuk ke tabel grades.</p>
+                <p className="text-sm text-blue-800">Nilai akan disimpan ke tabel grades dan tetap tampil setelah halaman di-refresh.</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <Select
@@ -103,9 +135,10 @@ export function AssignmentSubmissions() {
                   placeholder="Opsional"
                 />
               </div>
+              {saveError && <p className="mt-3 text-sm text-red-700">{saveError}</p>}
               {!canGrade && <p className="mt-3 text-sm text-red-700">Nilai belum bisa diinput karena siswa belum mengumpulkan tugas.</p>}
               <div className="mt-4 flex justify-end">
-                <Button disabled={!canGrade} onClick={() => setSelected(null)}><Save className="h-4 w-4" />Simpan Nilai</Button>
+                <Button disabled={!canGrade || isSaving || !currentScore.score} onClick={saveGrade}><Save className="h-4 w-4" />Simpan Nilai</Button>
               </div>
             </section>
           </div>

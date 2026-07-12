@@ -1,10 +1,9 @@
-import { dummyAnnouncements } from "@/data/dummyAnnouncements";
 import type { Announcement } from "@/types/submission";
 import { getSupabase, handleSupabaseError } from "./serviceUtils";
 
 export async function getAnnouncements() {
   const client = getSupabase();
-  if (!client) return dummyAnnouncements;
+  if (!client) return [];
 
   const { data, error } = await client.from("announcements").select("*").eq("is_active", true).order("created_at", { ascending: false });
   if (error) handleSupabaseError(error, "Informasi gagal dimuat.");

@@ -1,10 +1,9 @@
-import { dummyGrades } from "@/data/dummyGrades";
 import type { Grade } from "@/types/grade";
 import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getGrades() {
   const client = getSupabase();
-  if (!client) return dummyGrades;
+  if (!client) return [];
 
   const { data, error } = await client
     .from("grades")

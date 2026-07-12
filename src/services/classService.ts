@@ -1,10 +1,9 @@
-import { dummyClasses } from "@/data/dummyClasses";
 import type { ClassRoom } from "@/types/class";
 import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getClasses() {
   const client = getSupabase();
-  if (!client) return dummyClasses;
+  if (!client) return [];
 
   const { data, error } = await client.from("classes").select("*").order("grade_level").order("name");
   if (error) handleSupabaseError(error, "Data kelas gagal dimuat.");

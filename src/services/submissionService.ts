@@ -1,15 +1,14 @@
-import { dummySubmissions } from "@/data/dummySubmissions";
 import type { Submission } from "@/types/submission";
 import { createSignedUrl } from "@/lib/storage";
 import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getSubmissions() {
   const client = getSupabase();
-  if (!client) return dummySubmissions;
+  if (!client) return [];
 
   const { data, error } = await client
     .from("submissions")
-    .select("*, assignments(title), students(full_name, classes(name))")
+    .select("*, assignments(title, teacher_id, class_id, subject_id, subjects(name, kkm)), students(full_name, class_id, classes(name))")
     .order("submitted_at", { ascending: false });
   if (error) handleSupabaseError(error, "Data pengumpulan gagal dimuat.");
   return Promise.all((data ?? []).map(mapSubmission));
@@ -22,7 +21,7 @@ export async function createSubmission(submission: Submission) {
   const { data, error } = await client
     .from("submissions")
     .upsert(toSubmissionRow(submission), { onConflict: "assignment_id,student_id" })
-    .select("*, assignments(title), students(full_name, classes(name))")
+    .select("*, assignments(title, teacher_id, class_id, subject_id, subjects(name, kkm)), students(full_name, class_id, classes(name))")
     .single();
   if (error) handleSupabaseError(error, "Pengumpulan tugas gagal disimpan.");
   return mapSubmission(data);
@@ -32,7 +31,7 @@ export async function updateSubmission(id: string, submission: Partial<Submissio
   const client = getSupabase();
   if (!client) return { id, ...submission };
 
-  const { data, error } = await client.from("submissions").update(toSubmissionRow(submission)).eq("id", id).select("*, assignments(title), students(full_name, classes(name))").single();
+  const { data, error } = await client.from("submissions").update(toSubmissionRow(submission)).eq("id", id).select("*, assignments(title, teacher_id, class_id, subject_id, subjects(name, kkm)), students(full_name, class_id, classes(name))").single();
   if (error) handleSupabaseError(error, "Pengumpulan tugas gagal diperbarui.");
   return mapSubmission(data);
 }
@@ -45,6 +44,11 @@ async function mapSubmission(row: any): Promise<Submission> {
     id: row.id,
     assignmentId: row.assignment_id,
     assignmentTitle: row.assignments?.title ?? "-",
+    teacherId: row.assignments?.teacher_id ?? undefined,
+    classId: row.assignments?.class_id ?? row.students?.class_id ?? undefined,
+    subjectId: row.assignments?.subject_id ?? undefined,
+    subjectName: row.assignments?.subjects?.name ?? undefined,
+    kkm: row.assignments?.subjects?.kkm ?? undefined,
     studentId: row.student_id,
     studentName: row.students?.full_name ?? "-",
     className: row.students?.classes?.name ?? "-",

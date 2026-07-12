@@ -1,10 +1,9 @@
-import { dummyTeachers } from "@/data/dummyTeachers";
 import type { Teacher } from "@/types/teacher";
 import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getTeachers() {
   const client = getSupabase();
-  if (!client) return dummyTeachers;
+  if (!client) return [];
 
   const { data, error } = await client.from("teachers").select("*, profiles(username), teacher_classes(classes(id, name), subjects(id, name))").order("full_name");
   if (error) handleSupabaseError(error, "Data guru gagal dimuat.");
@@ -69,7 +68,7 @@ function toTeacherRow(teacher: Partial<Teacher>) {
 
 async function getTeacherById(id: string) {
   const client = getSupabase();
-  if (!client) return dummyTeachers.find((teacher) => teacher.id === id) ?? dummyTeachers[0];
+  if (!client) throw new Error("Supabase belum dikonfigurasi.");
 
   const { data, error } = await client
     .from("teachers")

@@ -15,6 +15,10 @@ export function getCurrentUser(): AuthUser | null {
   }
 }
 
+export function setCurrentUser(user: AuthUser) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+}
+
 export async function login(payload: LoginPayload): Promise<AuthUser> {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error("Supabase belum dikonfigurasi. Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY terlebih dahulu.");

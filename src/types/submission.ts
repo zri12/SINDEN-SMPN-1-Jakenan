@@ -2,6 +2,11 @@ export interface Submission {
   id: string;
   assignmentId: string;
   assignmentTitle: string;
+  teacherId?: string;
+  classId?: string;
+  subjectId?: string;
+  subjectName?: string;
+  kkm?: number;
   studentId: string;
   studentName: string;
   className: string;

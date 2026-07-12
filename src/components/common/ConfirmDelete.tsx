@@ -6,7 +6,7 @@ export function ConfirmDelete({ label, onCancel, onConfirm }: { label: string; o
     <div>
       <div className="flex gap-3 rounded-xl bg-red-50 p-4 text-red-800">
         <AlertTriangle className="h-5 w-5 shrink-0" />
-        <p className="text-sm">Hapus <strong>{label}</strong>? Untuk tahap dummy data, data akan hilang dari tampilan sampai halaman di-refresh.</p>
+        <p className="text-sm">Hapus <strong>{label}</strong>? Data akan dihapus dari Supabase dan tidak bisa dikembalikan dari aplikasi.</p>
       </div>
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} className="w-full sm:w-auto">Batal</Button>

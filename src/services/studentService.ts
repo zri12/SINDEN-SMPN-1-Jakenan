@@ -1,10 +1,9 @@
-import { dummyStudents } from "@/data/dummyStudents";
 import type { Student } from "@/types/student";
 import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getStudents() {
   const client = getSupabase();
-  if (!client) return dummyStudents;
+  if (!client) return [];
 
   const { data, error } = await client.from("students").select("*, profiles(username), classes(id, name)").order("full_name");
   if (error) handleSupabaseError(error, "Data siswa gagal dimuat.");
@@ -13,7 +12,7 @@ export async function getStudents() {
 
 export async function getCurrentStudent() {
   const client = getSupabase();
-  if (!client) return dummyStudents[0];
+  if (!client) throw new Error("Supabase belum dikonfigurasi.");
 
   const { data: authData, error: authError } = await client.auth.getUser();
   if (authError) handleSupabaseError(authError, "Akun siswa gagal dibaca.");

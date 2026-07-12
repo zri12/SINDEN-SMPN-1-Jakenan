@@ -1,10 +1,9 @@
-import { dummySubjects } from "@/data/dummySubjects";
 import type { Subject } from "@/types/subject";
 import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getSubjects() {
   const client = getSupabase();
-  if (!client) return dummySubjects;
+  if (!client) return [];
 
   const { data, error } = await client.from("subjects").select("*").order("name");
   if (error) handleSupabaseError(error, "Data mata pelajaran gagal dimuat.");

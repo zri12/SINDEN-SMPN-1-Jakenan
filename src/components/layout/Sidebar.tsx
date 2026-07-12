@@ -3,17 +3,19 @@ import { NavLink } from "react-router-dom";
 import { useAppSettings } from "@/contexts/AppSettingsContext";
 import { menusByRole } from "@/constants/menus";
 import { roleAvatars, roleLabels } from "@/constants/roles";
-import type { Role } from "@/types/auth";
+import type { AuthUser, Role } from "@/types/auth";
 
 interface SidebarProps {
   role: Role;
+  user: AuthUser;
   onLogout: () => void;
   onNavigate?: () => void;
 }
 
-export function Sidebar({ role, onLogout, onNavigate }: SidebarProps) {
+export function Sidebar({ role, user, onLogout, onNavigate }: SidebarProps) {
   const menus = menusByRole[role];
   const { settings } = useAppSettings();
+  const displayName = user.username || user.email?.split("@")[0] || user.fullName;
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col bg-sinden-sidebar text-white">
@@ -35,8 +37,8 @@ export function Sidebar({ role, onLogout, onNavigate }: SidebarProps) {
             {roleAvatars[role]}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{roleLabels[role]}</p>
-            <p className="truncate text-xs text-white/50">{role === "admin" ? "admin@smp1jakenan.sch.id" : role === "teacher" ? "Guru Mata Pelajaran" : "Ahmad Fauzan - 7A"}</p>
+            <p className="truncate text-sm font-semibold">{displayName}</p>
+            <p className="truncate text-xs text-white/50">{roleLabels[role]}</p>
           </div>
         </div>
       </div>

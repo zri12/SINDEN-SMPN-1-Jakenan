@@ -9,9 +9,9 @@ export function MyGrades() {
 
   return (
     <div>
-      <PageHeader title="Nilai Saya" description="Nilai dummy difilter sebagai tampilan awal siswa." />
+      <PageHeader title="Nilai Saya" description="Nilai yang tersimpan untuk akun siswa aktif." />
       <Card>
-        {isLoading ? <Loading /> : error ? <p className="text-sm text-red-600">{error}</p> : <GradeTable grades={grades.filter((grade) => ["student-1", "student-2"].includes(grade.studentId))} />}
+        {isLoading ? <Loading /> : error ? <p className="text-sm text-red-600">{error}</p> : <GradeTable grades={grades} />}
       </Card>
     </div>
   );
