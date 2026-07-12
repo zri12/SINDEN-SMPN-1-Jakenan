@@ -64,9 +64,9 @@ export function LoginPage() {
         <section className="relative flex min-h-screen items-center justify-center p-5 sm:p-8 lg:bg-white">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sinden-sidebar via-blue-600 to-indigo-500 lg:hidden" />
           <div className="login-card-in w-full max-w-[440px] rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-[0_28px_80px_rgba(15,23,42,0.14)] backdrop-blur sm:p-8 lg:border-slate-100 lg:shadow-none">
-            <div className="mb-8">
-              <div className="mb-5 flex items-center justify-between">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sinden-sidebar text-white shadow-lg shadow-blue-900/20">
+            <div className="mb-8 text-center">
+              <div className="mb-5 flex flex-col items-center gap-3">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sinden-sidebar text-white shadow-lg shadow-blue-900/20">
                   {settings.logoUrl ? <img src={settings.logoUrl} alt="Logo sekolah" className="h-9 w-9 object-contain" /> : <BookOpen className="h-7 w-7" />}
                 </div>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Secure Login</span>
