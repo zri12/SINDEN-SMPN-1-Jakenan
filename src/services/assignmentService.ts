@@ -52,7 +52,9 @@ function mapAssignment(row: any): Assignment {
     title: row.title,
     description: row.description ?? "",
     fileUrl: row.assignment_file_url ?? undefined,
+    filePath: row.assignment_file_path ?? undefined,
     linkUrl: row.assignment_link_url ?? undefined,
+    publishAt: row.publish_at ?? row.created_at ?? undefined,
     deadline: row.deadline ?? "",
     status: row.status === "closed" ? "closed" : row.status === "archived" ? "closed" : "active",
     submittedCount: row.submitted_count ?? 0
@@ -67,7 +69,9 @@ function toAssignmentRow(assignment: Partial<Assignment>) {
     title: assignment.title,
     description: assignment.description,
     assignment_file_url: assignment.fileUrl,
+    assignment_file_path: assignment.filePath,
     assignment_link_url: assignment.linkUrl,
+    publish_at: assignment.publishAt,
     deadline: assignment.deadline,
     status: assignment.status === "late" ? "active" : assignment.status
   };

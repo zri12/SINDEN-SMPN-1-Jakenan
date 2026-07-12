@@ -23,7 +23,7 @@ export function Sidebar({ role, user, onLogout, onNavigate }: SidebarProps) {
   const displayName = user.username || user.email?.split("@")[0] || user.fullName;
   const pendingAssignmentCount =
     role === "student"
-      ? assignments.filter((assignment) => !submissions.some((submission) => submission.assignmentId === assignment.id)).length
+      ? assignments.filter((assignment) => isPublished(assignment.publishAt) && !submissions.some((submission) => submission.assignmentId === assignment.id)).length
       : 0;
 
   return (
@@ -100,4 +100,9 @@ export function Sidebar({ role, user, onLogout, onNavigate }: SidebarProps) {
       </div>
     </aside>
   );
+}
+
+function isPublished(publishAt?: string) {
+  if (!publishAt) return true;
+  return new Date(publishAt).getTime() <= Date.now();
 }

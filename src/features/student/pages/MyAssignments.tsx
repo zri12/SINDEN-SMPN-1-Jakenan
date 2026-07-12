@@ -39,7 +39,7 @@ export function MyAssignments() {
   }, []);
 
   const assignments = useMemo(
-    () => allAssignments.filter((item) => !currentStudent || !currentStudent.classId || item.classId === currentStudent.classId || item.className === currentStudent.className),
+    () => allAssignments.filter((item) => isPublished(item.publishAt) && (!currentStudent || !currentStudent.classId || item.classId === currentStudent.classId || item.className === currentStudent.className)),
     [allAssignments, currentStudent]
   );
 
@@ -88,6 +88,10 @@ export function MyAssignments() {
 
   const submitAssignment = async () => {
     if (!selected || !currentStudent) return;
+    if (isLate(selected.deadline)) {
+      setSubmitError("Deadline tugas sudah berakhir. Jawaban tidak bisa dikirim lagi.");
+      return;
+    }
     if (!submission.file && !submission.link.trim()) {
       setSubmitError("Tambahkan file/gambar atau link jawaban terlebih dahulu.");
       return;
@@ -141,6 +145,7 @@ export function MyAssignments() {
         privateComment={privateComment}
         submitError={submitError}
         isSubmitting={isSubmitting}
+        isDeadlineClosed={isLate(selected.deadline)}
         onBack={() => setSelected(null)}
         onChangeSubmission={setSubmission}
         onChangePrivateComment={setPrivateComment}
@@ -248,6 +253,7 @@ function AssignmentDetailPage({
   privateComment,
   submitError,
   isSubmitting,
+  isDeadlineClosed,
   onBack,
   onChangeSubmission,
   onChangePrivateComment,
@@ -259,6 +265,7 @@ function AssignmentDetailPage({
   privateComment: string;
   submitError: string;
   isSubmitting: boolean;
+  isDeadlineClosed: boolean;
   onBack: () => void;
   onChangeSubmission: (value: { file: File | null; link: string; note: string }) => void;
   onChangePrivateComment: (value: string) => void;
@@ -323,17 +330,18 @@ function AssignmentDetailPage({
                 </div>
               </div>
             )}
+            {isDeadlineClosed && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Deadline sudah berakhir. Pengumpulan jawaban ditutup.</p>}
             {submitError && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>}
             <label className="mt-6 flex min-h-12 cursor-pointer items-center justify-center rounded border border-slate-400 px-4 text-sm text-slate-700 hover:bg-slate-50">
               <span className="flex min-w-0 items-center gap-2 truncate"><FileUp className="h-4 w-4" />{submission.file?.name || "+ Add"}</span>
-              <input type="file" className="sr-only" onChange={(event) => onChangeSubmission({ ...submission, file: event.target.files?.[0] ?? null })} />
+              <input type="file" className="sr-only" disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, file: event.target.files?.[0] ?? null })} />
             </label>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Ekstensi file yang diizinkan: .jpg, .jpeg, .png, .pdf, .docx, .doc, .ppt, .pptx, .xls, .xlsx, .txt, .zip, .rar, .7zip
             </p>
             <p className="text-sm text-slate-500">Ukuran file yang diizinkan: 4 MB</p>
-            <Input className="mt-4" value={submission.link} onChange={(event) => onChangeSubmission({ ...submission, link: event.target.value })} placeholder="Link jawaban" />
-            <Button onClick={onSubmit} disabled={isSubmitting} className="mt-5 w-full bg-slate-800 hover:bg-slate-900">
+            <Input className="mt-4" value={submission.link} disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, link: event.target.value })} placeholder="Link jawaban" />
+            <Button onClick={onSubmit} disabled={isSubmitting || isDeadlineClosed} className="mt-5 w-full bg-slate-800 hover:bg-slate-900">
               <Upload className="h-4 w-4" />{isSubmitting ? "Mengirim..." : "Submit"}
             </Button>
           </Card>
@@ -380,4 +388,9 @@ function OpenButton({ href, label }: { href: string; label: string }) {
 function isLate(deadline: string) {
   if (!deadline) return false;
   return new Date(deadline).getTime() < Date.now();
+}
+
+function isPublished(publishAt?: string) {
+  if (!publishAt) return true;
+  return new Date(publishAt).getTime() <= Date.now();
 }

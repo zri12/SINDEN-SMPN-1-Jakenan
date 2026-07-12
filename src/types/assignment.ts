@@ -9,7 +9,9 @@ export interface Assignment {
   title: string;
   description: string;
   fileUrl?: string;
+  filePath?: string;
   linkUrl?: string;
+  publishAt?: string;
   deadline: string;
   status: "active" | "closed" | "late";
   submittedCount: number;
