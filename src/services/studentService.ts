@@ -18,13 +18,35 @@ export async function getCurrentStudent() {
   if (authError) handleSupabaseError(authError, "Akun siswa gagal dibaca.");
   if (!authData.user) throw new Error("Sesi login tidak ditemukan.");
 
+  const { data: profile, error: profileError } = await client
+    .from("profiles")
+    .select("id, full_name, username, is_active")
+    .eq("id", authData.user.id)
+    .maybeSingle();
+  if (profileError) handleSupabaseError(profileError, "Profile siswa gagal dimuat.");
+  if (!profile) throw new Error("Profile pengguna belum dibuat.");
+
   const { data, error } = await client
     .from("students")
     .select("*, profiles(username), classes(id, name)")
     .eq("profile_id", authData.user.id)
-    .single();
+    .order("updated_at", { ascending: false })
+    .limit(1);
   if (error) handleSupabaseError(error, "Data siswa aktif gagal dimuat.");
-  return mapStudent(data);
+  if (data?.[0]) return mapStudent(data[0]);
+
+  return {
+    id: "",
+    profileId: profile.id,
+    nis: "",
+    nisn: "",
+    fullName: profile.full_name,
+    classId: "",
+    className: "-",
+    gender: "L",
+    username: profile.username ?? "",
+    status: profile.is_active ? "active" : "inactive"
+  } satisfies Student;
 }
 
 export async function createStudent(student: Student) {

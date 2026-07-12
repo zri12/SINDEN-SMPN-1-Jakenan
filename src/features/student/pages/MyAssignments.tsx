@@ -35,7 +35,7 @@ export function MyAssignments() {
   }, []);
 
   const assignments = useMemo(
-    () => allAssignments.filter((item) => !currentStudent || item.classId === currentStudent.classId || item.className === currentStudent.className),
+    () => allAssignments.filter((item) => !currentStudent || !currentStudent.classId || item.classId === currentStudent.classId || item.className === currentStudent.className),
     [allAssignments, currentStudent]
   );
 
