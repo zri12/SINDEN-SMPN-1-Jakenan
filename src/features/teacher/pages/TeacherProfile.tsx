@@ -133,7 +133,10 @@ export function TeacherProfile() {
         }
       />
       {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      {isLoading ? (
+        <TeacherProfileSkeleton />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
         <Card className="text-center">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-blue-700">
             <UserCircle className="h-14 w-14" />
@@ -237,6 +240,7 @@ export function TeacherProfile() {
           )}
         </Card>
       </div>
+      )}
     </div>
   );
 }
@@ -262,6 +266,40 @@ function ProfileLine({ icon: Icon, label, value }: { icon: LucideIcon; label: st
         <p className="text-xs text-slate-400">{label}</p>
         <p className="font-medium text-slate-800">{value}</p>
       </div>
+    </div>
+  );
+}
+
+function TeacherProfileSkeleton() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <Card className="text-center">
+        <div className="mx-auto h-24 w-24 animate-pulse rounded-full bg-slate-100" />
+        <div className="mx-auto mt-4 h-6 w-40 animate-pulse rounded bg-slate-100" />
+        <div className="mx-auto mt-3 h-4 w-32 animate-pulse rounded bg-slate-100" />
+        <div className="mt-5 space-y-3">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
+              <div className="h-4 w-4 animate-pulse rounded bg-slate-200" />
+              <div className="flex-1">
+                <div className="h-3 w-16 animate-pulse rounded bg-slate-200" />
+                <div className="mt-2 h-4 w-36 animate-pulse rounded bg-slate-200" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card>
+        <div className="mb-4 h-5 w-28 animate-pulse rounded bg-slate-100" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 9 }).map((_, index) => (
+            <div key={index} className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+              <div className="h-3 w-24 animate-pulse rounded bg-slate-200" />
+              <div className="mt-3 h-5 w-40 animate-pulse rounded bg-slate-200" />
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
