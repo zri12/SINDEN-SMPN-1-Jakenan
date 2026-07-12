@@ -162,7 +162,7 @@ function StudentEditor({ classes, form, setForm, error, isSaving, onCancel, onSa
         <Input label="Username Akun" value={form.username} disabled className="text-slate-400" />
         <Select label="Status" value={form.status} options={[{ value: "active", label: "Aktif" }, { value: "inactive", label: "Nonaktif" }]} onChange={(event) => setForm({ ...form, status: event.target.value as Student["status"] })} />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
         <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan"}</Button>
       </div>

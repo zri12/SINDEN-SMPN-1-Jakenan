@@ -187,7 +187,7 @@ function TeacherEditor({ classes, subjects, form, setForm, error, isSaving, onCa
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
         <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan"}</Button>
       </div>

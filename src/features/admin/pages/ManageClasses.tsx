@@ -120,7 +120,7 @@ function ClassEditor({ form, setForm, error, isSaving, onCancel, onSave }: { for
         <Select label="Tingkat" value={String(form.gradeLevel)} options={[7, 8, 9].map((value) => ({ value: String(value), label: `Kelas ${value}` }))} onChange={(event) => setForm({ ...form, gradeLevel: Number(event.target.value) as 7 | 8 | 9 })} />
         <Input label="Tahun Ajaran" value={form.academicYear} onChange={(event) => setForm({ ...form, academicYear: event.target.value })} />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
         <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan"}</Button>
       </div>

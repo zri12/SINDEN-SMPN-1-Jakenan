@@ -87,19 +87,19 @@ export function Settings() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <Building2 className="h-5 w-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm text-slate-500">Browser title</p>
-                <p className="font-semibold text-slate-900">{form.appName} | {form.schoolName}</p>
+                <p className="truncate font-semibold text-slate-900">{form.appName} | {form.schoolName}</p>
               </div>
             </div>
           </Card>
 
           <Card>
-            <div className="mb-4 flex items-center gap-3">
+            <div className="mb-4 flex items-start gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                 <Image className="h-5 w-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-semibold text-slate-900">Logo Sekolah</h3>
                 <p className="text-sm text-slate-500">PNG/JPG untuk login, sidebar, dan favicon browser.</p>
               </div>

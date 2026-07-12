@@ -167,15 +167,15 @@ export function MyAssignments() {
             </div>
             {submitError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>}
             <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 hover:bg-slate-100">
-              <FileUp className="h-5 w-5 text-blue-600" />
-              <span>{submission.file?.name || "Pilih file/gambar jawaban"}</span>
+              <FileUp className="h-5 w-5 shrink-0 text-blue-600" />
+              <span className="min-w-0 truncate">{submission.file?.name || "Pilih file/gambar jawaban"}</span>
               <input type="file" className="sr-only" onChange={(event) => setSubmission({ ...submission, file: event.target.files?.[0] ?? null })} />
             </label>
             <Input label="Link Jawaban" value={submission.link} onChange={(event) => setSubmission({ ...submission, link: event.target.value })} placeholder="Google Drive, YouTube, website, dll." />
             <Input label="Catatan" value={submission.note} onChange={(event) => setSubmission({ ...submission, note: event.target.value })} placeholder="Catatan untuk guru" />
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" onClick={() => setModalOpen(false)} disabled={isSubmitting}>Batal</Button>
-              <Button onClick={submitAssignment} disabled={isSubmitting}><Link className="h-4 w-4" />{isSubmitting ? "Mengirim..." : "Kirim Pengumpulan"}</Button>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={() => setModalOpen(false)} disabled={isSubmitting} className="w-full sm:w-auto">Batal</Button>
+              <Button onClick={submitAssignment} disabled={isSubmitting} className="w-full sm:w-auto"><Link className="h-4 w-4" />{isSubmitting ? "Mengirim..." : "Kirim Pengumpulan"}</Button>
             </div>
           </div>
         </Modal>

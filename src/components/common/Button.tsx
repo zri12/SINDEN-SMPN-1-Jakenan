@@ -17,11 +17,11 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 export function Button({ children, variant = "primary", size = "md", className = "", ...props }: ButtonProps) {
-  const sizing = size === "sm" ? "h-8 px-3 text-xs" : "h-10 px-4 text-sm";
+  const sizing = size === "sm" ? "min-h-8 px-3 py-1.5 text-xs" : "min-h-10 px-4 py-2 text-sm";
 
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg border font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${sizing} ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg border font-medium leading-tight transition disabled:cursor-not-allowed disabled:opacity-60 ${sizing} ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

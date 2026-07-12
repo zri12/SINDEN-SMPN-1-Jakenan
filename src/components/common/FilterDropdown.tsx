@@ -9,12 +9,14 @@ interface FilterDropdownProps {
 
 export function FilterDropdown({ value, onChange, options, placeholder = "Semua" }: FilterDropdownProps) {
   return (
-    <Select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      options={options}
-      placeholder={placeholder}
-      className="min-w-40"
-    />
+    <div className="w-full sm:w-auto">
+      <Select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        options={options}
+        placeholder={placeholder}
+        className="w-full sm:min-w-40"
+      />
+    </div>
   );
 }

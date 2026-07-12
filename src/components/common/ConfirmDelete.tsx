@@ -8,9 +8,9 @@ export function ConfirmDelete({ label, onCancel, onConfirm }: { label: string; o
         <AlertTriangle className="h-5 w-5 shrink-0" />
         <p className="text-sm">Hapus <strong>{label}</strong>? Untuk tahap dummy data, data akan hilang dari tampilan sampai halaman di-refresh.</p>
       </div>
-      <div className="mt-5 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onCancel}>Batal</Button>
-        <Button variant="danger" onClick={onConfirm}>Hapus</Button>
+      <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button variant="secondary" onClick={onCancel} className="w-full sm:w-auto">Batal</Button>
+        <Button variant="danger" onClick={onConfirm} className="w-full sm:w-auto">Hapus</Button>
       </div>
     </div>
   );

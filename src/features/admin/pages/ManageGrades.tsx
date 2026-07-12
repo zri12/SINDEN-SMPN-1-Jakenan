@@ -173,7 +173,7 @@ function GradeEditor({ form, setForm, students, teachers, subjects, error, isSav
         <Input label="Nilai" type="number" min={0} max={100} value={form.score} onChange={(event) => setForm({ ...form, score: Number(event.target.value) })} />
         <Input label="KKM" type="number" min={0} max={100} value={form.kkm} onChange={(event) => setForm({ ...form, kkm: Number(event.target.value) })} />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
         <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan"}</Button>
       </div>

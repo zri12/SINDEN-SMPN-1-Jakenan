@@ -14,7 +14,7 @@ export function FormShell({ type }: { type: "student" | "teacher" | "class" | "s
         <Select label="Status" options={[{ value: "active", label: "Aktif" }, { value: "closed", label: "Selesai" }]} placeholder="Pilih status" />
       </div>
       {(isAssignment || isSubmission) && <Input label="File / Link" placeholder="URL atau nama file" />}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary">Batal</Button>
         <Button type="button">Simpan</Button>
       </div>

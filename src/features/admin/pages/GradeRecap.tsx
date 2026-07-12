@@ -10,7 +10,7 @@ export function GradeRecap() {
   return (
     <div>
       <PageHeader title="Rekap Nilai" description="Rekap sederhana berdasarkan data dummy." />
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard label="Rata-rata" value={calculateAverage(scores).toFixed(1)} />
         <SummaryCard label="Nilai Tertinggi" value={Math.max(...scores)} tone="success" />
         <SummaryCard label="Nilai Terendah" value={Math.min(...scores)} tone="danger" />
