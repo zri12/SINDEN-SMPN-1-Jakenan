@@ -1,5 +1,5 @@
 import { ArrowLeft, CalendarCheck, Clock, ClipboardList, ExternalLink, FileUp, Link, Search, Send, Upload, User } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -168,7 +168,7 @@ export function MyAssignments() {
             <Button className="w-full md:w-24"><Search className="h-4 w-4" /></Button>
           </div>
 
-          <div className="border-b border-emerald-300">
+          <div className="border-b border-blue-300">
             <div className="flex flex-wrap gap-1">
               <AssignmentTabButton label="Todo" count={grouped.todo.length} active={activeTab === "todo"} onClick={() => setActiveTab("todo")} />
               <AssignmentTabButton label="Missed" count={grouped.missed.length} active={activeTab === "missed"} onClick={() => setActiveTab("missed")} />
@@ -202,7 +202,7 @@ function AssignmentTabButton({ label, count, active, onClick }: { label: string;
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-11 items-center gap-2 px-5 text-sm font-semibold transition ${active ? "rounded-t-lg bg-emerald-500 text-white" : "text-emerald-600 hover:bg-emerald-50"}`}
+      className={`flex min-h-11 items-center gap-2 px-5 text-sm font-semibold transition ${active ? "rounded-t-lg bg-blue-600 text-white" : "text-blue-600 hover:bg-blue-50"}`}
     >
       {label}
       <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-red-400 text-white" : "bg-red-500 text-white"}`}>{count}</span>
@@ -211,7 +211,7 @@ function AssignmentTabButton({ label, count, active, onClick }: { label: string;
 }
 
 function AssignmentCard({ assignment, tab, submitted, onClick }: { assignment: Assignment; tab: AssignmentTab; submitted: boolean; onClick: () => void }) {
-  const tone = tab === "missed" ? "red" : submitted ? "emerald" : "slate";
+  const tone = tab === "missed" ? "red" : submitted ? "blue" : "slate";
 
   return (
     <button type="button" onClick={onClick} className="w-full rounded-lg bg-white p-5 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-md">
@@ -221,7 +221,7 @@ function AssignmentCard({ assignment, tab, submitted, onClick }: { assignment: A
           <p className="mt-4 text-sm font-medium uppercase tracking-wide text-slate-500">{assignment.subjectName || "Mata Pelajaran"} | {assignment.className}</p>
           <p className="mt-1 text-sm text-slate-500">Reguler | {assignment.className}</p>
         </div>
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${tone === "red" ? "bg-red-100 text-red-500" : tone === "emerald" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-700"}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${tone === "red" ? "bg-red-100 text-red-500" : tone === "blue" ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-700"}`}>
           <ClipboardList className="h-4 w-4" />Assignment
         </span>
       </div>
@@ -237,7 +237,7 @@ function AssignmentCard({ assignment, tab, submitted, onClick }: { assignment: A
           <p>07:00 s/d 08:40</p>
         </div>
         <div className="text-sm text-slate-700">
-          <p className="flex items-center gap-2 font-semibold text-teal-600"><CalendarCheck className="h-4 w-4" />Due Date</p>
+          <p className="flex items-center gap-2 font-semibold text-blue-600"><CalendarCheck className="h-4 w-4" />Due Date</p>
           <p className="mt-1">{assignment.deadline ? formatDate(assignment.deadline) : "No Due Date"}</p>
           {assignment.deadline && <p className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />23:59</p>}
         </div>
@@ -271,6 +271,14 @@ function AssignmentDetailPage({
   onChangePrivateComment: (value: string) => void;
   onSubmit: () => void;
 }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const [showLinkInput, setShowLinkInput] = useState(Boolean(submission.link));
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setShowLinkInput(Boolean(submission.link));
+  }, [submission.link]);
+
   return (
     <div>
       <PageHeader
@@ -283,7 +291,7 @@ function AssignmentDetailPage({
           <Card>
             <h2 className="text-xl font-bold text-slate-800">{assignment.title}</h2>
             <div className="mt-5 flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">{assignment.teacherName?.[0] ?? "G"}</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">{assignment.teacherName?.[0] ?? "G"}</span>
               <div>
                 <p className="font-semibold text-slate-800">{assignment.teacherName || "-"}</p>
                 <p className="text-sm text-slate-500">{formatDate(assignment.deadline)}</p>
@@ -321,7 +329,7 @@ function AssignmentDetailPage({
             <h3 className="text-lg font-bold text-slate-800">Tugas Anda</h3>
             <p className="mt-1 text-sm text-slate-500">Upload tugas anda disini</p>
             {existingSubmission && (
-              <div className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
+              <div className="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
                 <p className="font-semibold">Sudah dikumpulkan</p>
                 <p className="mt-1">{existingSubmission.submittedAt ? formatDate(existingSubmission.submittedAt) : "-"}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -332,15 +340,48 @@ function AssignmentDetailPage({
             )}
             {isDeadlineClosed && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Deadline sudah berakhir. Pengumpulan jawaban ditutup.</p>}
             {submitError && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{submitError}</p>}
-            <label className="mt-6 flex min-h-12 cursor-pointer items-center justify-center rounded border border-slate-400 px-4 text-sm text-slate-700 hover:bg-slate-50">
-              <span className="flex min-w-0 items-center gap-2 truncate"><FileUp className="h-4 w-4" />{submission.file?.name || "+ Add"}</span>
-              <input type="file" className="sr-only" disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, file: event.target.files?.[0] ?? null })} />
-            </label>
+            <div className="relative mt-6">
+              <button
+                type="button"
+                disabled={isDeadlineClosed}
+                onClick={() => setAddOpen((value) => !value)}
+                className="flex min-h-12 w-full items-center justify-center rounded border border-slate-400 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="flex min-w-0 items-center gap-2 truncate"><FileUp className="h-4 w-4" />{submission.file?.name || "+ Add"}</span>
+              </button>
+              {addOpen && (
+                <div className="absolute left-0 right-0 top-full z-20 rounded-b-lg border border-slate-200 bg-white py-2 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddOpen(false);
+                      fileInputRef.current?.click();
+                    }}
+                    className="flex w-full items-center gap-3 px-5 py-3 text-left text-sm text-slate-700 hover:bg-blue-50"
+                  >
+                    <FileUp className="h-4 w-4" />File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddOpen(false);
+                      setShowLinkInput(true);
+                    }}
+                    className="flex w-full items-center gap-3 px-5 py-3 text-left text-sm text-slate-700 hover:bg-blue-50"
+                  >
+                    <Link className="h-4 w-4" />Link
+                  </button>
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" className="sr-only" disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, file: event.target.files?.[0] ?? null })} />
+            </div>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Ekstensi file yang diizinkan: .jpg, .jpeg, .png, .pdf, .docx, .doc, .ppt, .pptx, .xls, .xlsx, .txt, .zip, .rar, .7zip
             </p>
             <p className="text-sm text-slate-500">Ukuran file yang diizinkan: 4 MB</p>
-            <Input className="mt-4" value={submission.link} disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, link: event.target.value })} placeholder="Link jawaban" />
+            {showLinkInput && (
+              <Input className="mt-4" value={submission.link} disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, link: event.target.value })} placeholder="Link jawaban" />
+            )}
             <Button onClick={onSubmit} disabled={isSubmitting || isDeadlineClosed} className="mt-5 w-full bg-slate-800 hover:bg-slate-900">
               <Upload className="h-4 w-4" />{isSubmitting ? "Mengirim..." : "Submit"}
             </Button>
@@ -368,7 +409,7 @@ function AssignmentDetailPage({
 function DetailItem({ icon: Icon, label, value, helper }: { icon: typeof CalendarCheck; label: string; value: string; helper: string }) {
   return (
     <div className="text-sm text-slate-700">
-      <p className="flex items-center gap-2 font-semibold text-slate-800"><Icon className="h-4 w-4 text-teal-600" />{label}</p>
+      <p className="flex items-center gap-2 font-semibold text-slate-800"><Icon className="h-4 w-4 text-blue-600" />{label}</p>
       <p className="mt-4">{value}</p>
       <p className="mt-1 flex items-center gap-1 text-slate-500"><Clock className="h-3.5 w-3.5" />{helper}</p>
     </div>
