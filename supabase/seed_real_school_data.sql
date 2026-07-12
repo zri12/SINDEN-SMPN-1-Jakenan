@@ -62,27 +62,33 @@ on conflict (code) do update set
   is_active = excluded.is_active,
   updated_at = now();
 
-insert into public.teachers (id, profile_id, nip, full_name, gender, employment_status, teacher_type, phone, status)
-values
-  ('00000000-0000-0000-0000-000000002001', 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8', '198701012010011001', 'Bapak Fauzan', 'L', 'PNS', 'Guru Mata Pelajaran', '081234567801', 'active')
-on conflict (id) do update set
-  profile_id = excluded.profile_id,
-  nip = excluded.nip,
-  full_name = excluded.full_name,
-  gender = excluded.gender,
-  employment_status = excluded.employment_status,
-  teacher_type = excluded.teacher_type,
-  phone = excluded.phone,
-  status = excluded.status,
-  updated_at = now();
+with updated_teacher as (
+  update public.teachers
+  set
+    profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8',
+    nip = '198701012010011001',
+    full_name = 'Bapak Fauzan',
+    gender = 'L',
+    employment_status = 'PNS',
+    teacher_type = 'Guru Mata Pelajaran',
+    phone = '081234567801',
+    status = 'active',
+    updated_at = now()
+  where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8'
+     or full_name = 'Bapak Fauzan'
+  returning id
+)
+insert into public.teachers (profile_id, nip, full_name, gender, employment_status, teacher_type, phone, status)
+select 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8', '198701012010011001', 'Bapak Fauzan', 'L', 'PNS', 'Guru Mata Pelajaran', '081234567801', 'active'
+where not exists (select 1 from updated_teacher);
 
 insert into public.students (id, profile_id, class_id, nis, nisn, full_name, gender, status)
 values
-  ('00000000-0000-0000-0000-000000003001', '51cc82fb-cc3c-469d-889b-944bde0d0e42', '00000000-0000-0000-0000-000000000701', '2021001', '2021001', 'Ahmad Fauzan', 'L', 'active'),
-  ('00000000-0000-0000-0000-000000003002', null, '00000000-0000-0000-0000-000000000701', '2021002', '2021002', 'Siti Aisyah', 'P', 'active'),
-  ('00000000-0000-0000-0000-000000003003', null, '00000000-0000-0000-0000-000000000702', '2021003', '2021003', 'Budi Pratama', 'L', 'active'),
-  ('00000000-0000-0000-0000-000000003004', null, '00000000-0000-0000-0000-000000000801', '2021004', '2021004', 'Dewi Lestari', 'P', 'active'),
-  ('00000000-0000-0000-0000-000000003005', null, '00000000-0000-0000-0000-000000000801', '2021005', '2021005', 'Raka Maulana', 'L', 'active')
+  ('00000000-0000-0000-0000-000000003001', '51cc82fb-cc3c-469d-889b-944bde0d0e42', (select id from public.classes where name = '7A' limit 1), '2021001', '2021001', 'Ahmad Fauzan', 'L', 'active'),
+  ('00000000-0000-0000-0000-000000003002', null, (select id from public.classes where name = '7A' limit 1), '2021002', '2021002', 'Siti Aisyah', 'P', 'active'),
+  ('00000000-0000-0000-0000-000000003003', null, (select id from public.classes where name = '7B' limit 1), '2021003', '2021003', 'Budi Pratama', 'L', 'active'),
+  ('00000000-0000-0000-0000-000000003004', null, (select id from public.classes where name = '8A' limit 1), '2021004', '2021004', 'Dewi Lestari', 'P', 'active'),
+  ('00000000-0000-0000-0000-000000003005', null, (select id from public.classes where name = '8A' limit 1), '2021005', '2021005', 'Raka Maulana', 'L', 'active')
 on conflict (nisn) do update set
   profile_id = excluded.profile_id,
   class_id = excluded.class_id,
@@ -93,18 +99,18 @@ on conflict (nisn) do update set
   updated_at = now();
 
 delete from public.teacher_classes
-where teacher_id = '00000000-0000-0000-0000-000000002001';
+where teacher_id = (select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1);
 
 insert into public.teacher_classes (teacher_id, class_id, subject_id, academic_year, semester)
 values
-  ('00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000701', '00000000-0000-0000-0000-000000001001', '2026/2027', 'genap'),
-  ('00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000702', '00000000-0000-0000-0000-000000001001', '2026/2027', 'genap'),
-  ('00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000801', '00000000-0000-0000-0000-000000001003', '2026/2027', 'genap');
+  ((select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '7A' limit 1), (select id from public.subjects where code = 'MTK' limit 1), '2026/2027', 'genap'),
+  ((select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '7B' limit 1), (select id from public.subjects where code = 'MTK' limit 1), '2026/2027', 'genap'),
+  ((select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '8A' limit 1), (select id from public.subjects where code = 'IPA' limit 1), '2026/2027', 'genap');
 
 insert into public.assignments (id, teacher_id, class_id, subject_id, title, description, assignment_link_url, deadline, status)
 values
-  ('00000000-0000-0000-0000-000000004001', '00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000701', '00000000-0000-0000-0000-000000001001', 'Tugas Matematika Bab Pecahan', 'Kerjakan soal pecahan sesuai instruksi.', 'https://example.com/tugas-pecahan', '2026-07-15 23:59:00+07', 'active'),
-  ('00000000-0000-0000-0000-000000004002', '00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000801', '00000000-0000-0000-0000-000000001003', 'Tugas IPA Sistem Pencernaan', 'Buat ringkasan sistem pencernaan.', 'https://example.com/tugas-ipa', '2026-07-20 23:59:00+07', 'active')
+  ('00000000-0000-0000-0000-000000004001', (select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '7A' limit 1), (select id from public.subjects where code = 'MTK' limit 1), 'Tugas Matematika Bab Pecahan', 'Kerjakan soal pecahan sesuai instruksi.', 'https://example.com/tugas-pecahan', '2026-07-15 23:59:00+07', 'active'),
+  ('00000000-0000-0000-0000-000000004002', (select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '8A' limit 1), (select id from public.subjects where code = 'IPA' limit 1), 'Tugas IPA Sistem Pencernaan', 'Buat ringkasan sistem pencernaan.', 'https://example.com/tugas-ipa', '2026-07-20 23:59:00+07', 'active')
 on conflict (id) do update set
   title = excluded.title,
   description = excluded.description,
@@ -115,9 +121,9 @@ on conflict (id) do update set
 
 insert into public.submissions (id, assignment_id, student_id, submission_link_url, note, status, submitted_at)
 values
-  ('00000000-0000-0000-0000-000000005001', '00000000-0000-0000-0000-000000004001', '00000000-0000-0000-0000-000000003001', 'https://example.com/jawaban-ahmad', 'Sudah sesuai petunjuk', 'submitted', '2026-07-13 08:00:00+07'),
-  ('00000000-0000-0000-0000-000000005002', '00000000-0000-0000-0000-000000004001', '00000000-0000-0000-0000-000000003002', 'https://example.com/jawaban-siti', 'Sesuai petunjuk', 'submitted', '2026-07-14 09:00:00+07'),
-  ('00000000-0000-0000-0000-000000005003', '00000000-0000-0000-0000-000000004002', '00000000-0000-0000-0000-000000003004', 'https://example.com/jawaban-dewi', null, 'submitted', '2026-07-14 10:00:00+07')
+  ('00000000-0000-0000-0000-000000005001', '00000000-0000-0000-0000-000000004001', (select id from public.students where nisn = '2021001' limit 1), 'https://example.com/jawaban-ahmad', 'Sudah sesuai petunjuk', 'submitted', '2026-07-13 08:00:00+07'),
+  ('00000000-0000-0000-0000-000000005002', '00000000-0000-0000-0000-000000004001', (select id from public.students where nisn = '2021002' limit 1), 'https://example.com/jawaban-siti', 'Sesuai petunjuk', 'submitted', '2026-07-14 09:00:00+07'),
+  ('00000000-0000-0000-0000-000000005003', '00000000-0000-0000-0000-000000004002', (select id from public.students where nisn = '2021004' limit 1), 'https://example.com/jawaban-dewi', null, 'submitted', '2026-07-14 10:00:00+07')
 on conflict (assignment_id, student_id) do update set
   submission_link_url = excluded.submission_link_url,
   note = excluded.note,
@@ -127,9 +133,9 @@ on conflict (assignment_id, student_id) do update set
 
 insert into public.grades (id, student_id, teacher_id, class_id, subject_id, assignment_id, submission_id, grade_type, score, kkm, semester, academic_year, note)
 values
-  ('00000000-0000-0000-0000-000000006001', '00000000-0000-0000-0000-000000003001', '00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000701', '00000000-0000-0000-0000-000000001001', '00000000-0000-0000-0000-000000004001', '00000000-0000-0000-0000-000000005001', 'assignment', 85, 75, 'genap', '2026/2027', 'Baik'),
-  ('00000000-0000-0000-0000-000000006002', '00000000-0000-0000-0000-000000003002', '00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000701', '00000000-0000-0000-0000-000000001001', '00000000-0000-0000-0000-000000004001', '00000000-0000-0000-0000-000000005002', 'assignment', 89, 75, 'genap', '2026/2027', 'Baik'),
-  ('00000000-0000-0000-0000-000000006003', '00000000-0000-0000-0000-000000003004', '00000000-0000-0000-0000-000000002001', '00000000-0000-0000-0000-000000000801', '00000000-0000-0000-0000-000000001003', '00000000-0000-0000-0000-000000004002', '00000000-0000-0000-0000-000000005003', 'assignment', 91, 75, 'genap', '2026/2027', 'Sangat baik')
+  ('00000000-0000-0000-0000-000000006001', (select id from public.students where nisn = '2021001' limit 1), (select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '7A' limit 1), (select id from public.subjects where code = 'MTK' limit 1), '00000000-0000-0000-0000-000000004001', (select s.id from public.submissions s join public.students st on st.id = s.student_id where s.assignment_id = '00000000-0000-0000-0000-000000004001' and st.nisn = '2021001' limit 1), 'assignment', 85, 75, 'genap', '2026/2027', 'Baik'),
+  ('00000000-0000-0000-0000-000000006002', (select id from public.students where nisn = '2021002' limit 1), (select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '7A' limit 1), (select id from public.subjects where code = 'MTK' limit 1), '00000000-0000-0000-0000-000000004001', (select s.id from public.submissions s join public.students st on st.id = s.student_id where s.assignment_id = '00000000-0000-0000-0000-000000004001' and st.nisn = '2021002' limit 1), 'assignment', 89, 75, 'genap', '2026/2027', 'Baik'),
+  ('00000000-0000-0000-0000-000000006003', (select id from public.students where nisn = '2021004' limit 1), (select id from public.teachers where profile_id = 'e6d0300c-462c-44b1-b097-11cb8b4fa4e8' limit 1), (select id from public.classes where name = '8A' limit 1), (select id from public.subjects where code = 'IPA' limit 1), '00000000-0000-0000-0000-000000004002', (select s.id from public.submissions s join public.students st on st.id = s.student_id where s.assignment_id = '00000000-0000-0000-0000-000000004002' and st.nisn = '2021004' limit 1), 'assignment', 91, 75, 'genap', '2026/2027', 'Sangat baik')
 on conflict (id) do update set
   score = excluded.score,
   kkm = excluded.kkm,

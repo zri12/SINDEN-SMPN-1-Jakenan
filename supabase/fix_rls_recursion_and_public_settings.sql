@@ -7,6 +7,7 @@ grant usage on schema public to anon, authenticated;
 grant select on table public.settings to anon, authenticated;
 
 drop policy if exists "settings_select_authenticated" on public.settings;
+drop policy if exists "settings_select_public" on public.settings;
 create policy "settings_select_public" on public.settings
 for select using (true);
 
