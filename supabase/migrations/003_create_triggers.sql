@@ -31,6 +31,10 @@ drop trigger if exists set_grades_updated_at on public.grades;
 create trigger set_grades_updated_at before update on public.grades
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_assignment_comments_updated_at on public.assignment_comments;
+create trigger set_assignment_comments_updated_at before update on public.assignment_comments
+for each row execute function public.set_updated_at();
+
 drop trigger if exists set_announcements_updated_at on public.announcements;
 create trigger set_announcements_updated_at before update on public.announcements
 for each row execute function public.set_updated_at();

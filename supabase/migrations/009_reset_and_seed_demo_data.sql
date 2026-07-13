@@ -22,6 +22,7 @@ begin
   end if;
 
   delete from public.grades;
+  delete from public.assignment_comments;
   delete from public.submissions;
   delete from public.assignments;
   delete from public.announcements;
@@ -147,6 +148,9 @@ begin
     ('00000000-0000-0000-0000-000000005002','00000000-0000-0000-0000-000000004001','00000000-0000-0000-0000-000000003002',null,null,'https://example.com/jawaban/siti-pecahan','Sudah dikumpulkan.','submitted',now() - interval '10 hours'),
     ('00000000-0000-0000-0000-000000005003','00000000-0000-0000-0000-000000004001','00000000-0000-0000-0000-000000003003',null,null,'https://example.com/jawaban/budi-pecahan','Perlu diperiksa.','reviewed',now() - interval '8 hours'),
     ('00000000-0000-0000-0000-000000005004','00000000-0000-0000-0000-000000004004','00000000-0000-0000-0000-000000003004',null,null,'https://example.com/jawaban/dewi-deskripsi','Terlambat satu hari.','late',now());
+
+  insert into public.assignment_comments (id, assignment_id, student_id, profile_id, comment, visibility, created_at) values
+    ('00000000-0000-0000-0000-000000008001','00000000-0000-0000-0000-000000004001','00000000-0000-0000-0000-000000003001',student_profile_id,'Jawaban lengkap sesuai instruksi.','public',now() - interval '12 hours');
 
   insert into public.grades (
     id, student_id, teacher_id, class_id, subject_id, assignment_id, submission_id, grade_type,

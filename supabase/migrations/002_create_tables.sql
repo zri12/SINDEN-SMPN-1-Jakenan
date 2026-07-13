@@ -125,6 +125,17 @@ create table if not exists public.grades (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.assignment_comments (
+  id uuid primary key default gen_random_uuid(),
+  assignment_id uuid not null references public.assignments(id) on delete cascade,
+  student_id uuid references public.students(id) on delete cascade,
+  profile_id uuid references public.profiles(id) on delete set null,
+  comment text not null,
+  visibility text not null default 'public' check (visibility in ('public', 'private')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 alter table public.assignments add column if not exists publish_at timestamptz;
 alter table public.grades add column if not exists assignment_id uuid references public.assignments(id) on delete set null;
 alter table public.grades add column if not exists submission_id uuid references public.submissions(id) on delete set null;
@@ -199,4 +210,6 @@ create index if not exists idx_grades_student_id on public.grades(student_id);
 create index if not exists idx_grades_teacher_subject on public.grades(teacher_id, subject_id);
 create index if not exists idx_grades_assignment_id on public.grades(assignment_id);
 create index if not exists idx_grades_submission_id on public.grades(submission_id);
+create index if not exists idx_assignment_comments_assignment_id on public.assignment_comments(assignment_id);
+create index if not exists idx_assignment_comments_student_id on public.assignment_comments(student_id);
 create index if not exists idx_announcements_target on public.announcements(target_role, class_id);

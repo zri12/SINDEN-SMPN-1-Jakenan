@@ -25,6 +25,7 @@ File patch sementara dan seed lama dihapus dari repo, termasuk file root seperti
 - RLS dibuat ulang dengan helper `security definer` untuk menghindari recursion.
 - Storage private untuk `assignment-files` dan `submission-files`.
 - Views rekap dibuat dengan `security_invoker = true`.
+- Komentar tugas disimpan permanen di tabel `assignment_comments`, bukan state frontend.
 
 ## Frontend Yang Disesuaikan
 
@@ -33,6 +34,7 @@ File patch sementara dan seed lama dihapus dari repo, termasuk file root seperti
 - Input nilai guru mengirim `assignment_id` dan `submission_id`.
 - Assignment insert/update membersihkan field `undefined`.
 - Validator upload disesuaikan dengan limit 10 MB dan format final.
+- Detail tugas siswa membaca dan menyimpan komentar melalui Supabase.
 
 ## Catatan Testing
 

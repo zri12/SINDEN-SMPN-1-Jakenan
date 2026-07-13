@@ -8,6 +8,7 @@ alter table public.teacher_classes enable row level security;
 alter table public.assignments enable row level security;
 alter table public.submissions enable row level security;
 alter table public.grades enable row level security;
+alter table public.assignment_comments enable row level security;
 alter table public.announcements enable row level security;
 alter table public.settings enable row level security;
 alter table public.activity_logs enable row level security;

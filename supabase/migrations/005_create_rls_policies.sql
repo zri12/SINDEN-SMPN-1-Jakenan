@@ -352,6 +352,47 @@ with check (
 
 create policy "grades_admin_delete" on public.grades for delete using (public.is_admin());
 
+drop policy if exists "assignment_comments_select_by_role" on public.assignment_comments;
+drop policy if exists "assignment_comments_student_insert" on public.assignment_comments;
+drop policy if exists "assignment_comments_student_update" on public.assignment_comments;
+drop policy if exists "assignment_comments_admin_delete" on public.assignment_comments;
+
+create policy "assignment_comments_select_by_role" on public.assignment_comments
+for select using (
+  public.is_admin()
+  or student_id = public.get_current_student_id()
+  or (
+    visibility = 'public'
+    and exists (
+      select 1
+      from public.assignments a
+      where a.id = assignment_comments.assignment_id
+        and a.teacher_id = public.get_current_teacher_id()
+    )
+  )
+);
+
+create policy "assignment_comments_student_insert" on public.assignment_comments
+for insert with check (
+  student_id = public.get_current_student_id()
+  and profile_id = auth.uid()
+  and exists (
+    select 1
+    from public.assignments a
+    where a.id = assignment_comments.assignment_id
+      and a.class_id = public.current_student_class_id()
+      and a.status = 'active'
+      and (a.publish_at is null or a.publish_at <= now())
+  )
+);
+
+create policy "assignment_comments_student_update" on public.assignment_comments
+for update using (student_id = public.get_current_student_id())
+with check (student_id = public.get_current_student_id() and profile_id = auth.uid());
+
+create policy "assignment_comments_admin_delete" on public.assignment_comments
+for delete using (public.is_admin());
+
 drop policy if exists "announcements_select_by_role" on public.announcements;
 drop policy if exists "announcements_admin_insert" on public.announcements;
 drop policy if exists "announcements_admin_update" on public.announcements;

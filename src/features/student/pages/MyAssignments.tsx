@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useSubmissions } from "@/hooks/useSubmissions";
 import { uploadSubmissionFile } from "@/lib/storage";
+import { createAssignmentComment, getAssignmentComments, type AssignmentComment } from "@/services/assignmentCommentService";
 import { createSubmission } from "@/services/submissionService";
 import { getCurrentStudent } from "@/services/studentService";
 import type { Assignment } from "@/types/assignment";
@@ -18,12 +19,6 @@ import type { Submission } from "@/types/submission";
 import { formatDate } from "@/utils/formatDate";
 
 type AssignmentTab = "todo" | "missed" | "submitted";
-type AssignmentComment = {
-  id: string;
-  text: string;
-  createdAt: string;
-};
-
 export function MyAssignments() {
   const { assignments: allAssignments, isLoading: assignmentsLoading, error: assignmentsError } = useAssignments();
   const { submissions, isLoading: submissionsLoading, error: submissionsError, refetch: refetchSubmissions } = useSubmissions();
@@ -34,9 +29,10 @@ export function MyAssignments() {
   const [search, setSearch] = useState("");
   const [submission, setSubmission] = useState<{ file: File | null; link: string; note: string }>({ file: null, link: "", note: "" });
   const [commentsByAssignment, setCommentsByAssignment] = useState<Record<string, AssignmentComment[]>>({});
-  const [privateCommentsByAssignment, setPrivateCommentsByAssignment] = useState<Record<string, AssignmentComment[]>>({});
   const [commentDraft, setCommentDraft] = useState("");
   const [privateComment, setPrivateComment] = useState("");
+  const [commentError, setCommentError] = useState("");
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -90,41 +86,52 @@ export function MyAssignments() {
     const existing = submissionsByAssignment.get(assignment.id);
     setSelected(assignment);
     setSubmitError("");
+    setCommentError("");
     setCommentDraft("");
     setPrivateComment("");
     setSubmission({ file: null, link: existing?.linkUrl ?? "", note: "" });
-    if (existing?.note) {
-      setCommentsByAssignment((items) => {
-        if (items[assignment.id]?.some((comment) => comment.id === `submission-${existing.id}`)) return items;
-        return {
-          ...items,
-          [assignment.id]: [
-            ...(items[assignment.id] ?? []),
-            {
-              id: `submission-${existing.id}`,
-              text: existing.note ?? "",
-              createdAt: existing.submittedAt ?? new Date().toISOString()
-            }
-          ]
-        };
-      });
+    void loadComments(assignment.id);
+  };
+
+  const loadComments = async (assignmentId: string) => {
+    setCommentsLoading(true);
+    setCommentError("");
+    try {
+      const result = await getAssignmentComments(assignmentId);
+      setCommentsByAssignment((items) => ({ ...items, [assignmentId]: result }));
+    } catch (err) {
+      setCommentError(err instanceof Error ? err.message : "Komentar gagal dimuat.");
+    } finally {
+      setCommentsLoading(false);
     }
   };
 
-  const sendComment = () => {
+  const sendComment = async () => {
     if (!selected) return;
     const text = commentDraft.trim();
     if (!text) return;
-    setCommentsByAssignment((items) => appendComment(items, selected.id, text));
-    setCommentDraft("");
+    setCommentError("");
+    try {
+      const created = await createAssignmentComment(selected.id, text, "public");
+      setCommentsByAssignment((items) => appendComment(items, selected.id, created));
+      setCommentDraft("");
+    } catch (err) {
+      setCommentError(err instanceof Error ? err.message : "Komentar gagal dikirim.");
+    }
   };
 
-  const sendPrivateComment = () => {
+  const sendPrivateComment = async () => {
     if (!selected) return;
     const text = privateComment.trim();
     if (!text) return;
-    setPrivateCommentsByAssignment((items) => appendComment(items, selected.id, text));
-    setPrivateComment("");
+    setCommentError("");
+    try {
+      const created = await createAssignmentComment(selected.id, text, "private");
+      setCommentsByAssignment((items) => appendComment(items, selected.id, created));
+      setPrivateComment("");
+    } catch (err) {
+      setCommentError(err instanceof Error ? err.message : "Komentar pribadi gagal dikirim.");
+    }
   };
 
   const submitAssignment = async () => {
@@ -155,7 +162,6 @@ export function MyAssignments() {
       }
 
       const latestPublicComment = selected ? getLatestCommentText(commentsByAssignment[selected.id]) : "";
-      const latestPrivateComment = selected ? getLatestCommentText(privateCommentsByAssignment[selected.id]) : "";
 
       await createSubmission({
         id: submissionsByAssignment.get(selected.id)?.id ?? "",
@@ -167,7 +173,7 @@ export function MyAssignments() {
         fileUrl,
         filePath,
         linkUrl: submission.link.trim() || undefined,
-        note: latestPublicComment || latestPrivateComment || undefined,
+        note: latestPublicComment || undefined,
         status: isLate(selected.deadline) ? "late" : "submitted",
         submittedAt: new Date().toISOString()
       });
@@ -191,10 +197,12 @@ export function MyAssignments() {
         assignment={selected}
         existingSubmission={submissionsByAssignment.get(selected.id)}
         submission={submission}
-        comments={commentsByAssignment[selected.id] ?? []}
-        privateComments={privateCommentsByAssignment[selected.id] ?? []}
+        comments={(commentsByAssignment[selected.id] ?? []).filter((comment) => comment.visibility === "public")}
+        privateComments={(commentsByAssignment[selected.id] ?? []).filter((comment) => comment.visibility === "private")}
         commentDraft={commentDraft}
         privateComment={privateComment}
+        commentError={commentError}
+        commentsLoading={commentsLoading}
         submitError={submitError}
         isSubmitting={isSubmitting}
         isDeadlineClosed={isLate(selected.deadline)}
@@ -309,6 +317,8 @@ function AssignmentDetailPage({
   privateComments,
   commentDraft,
   privateComment,
+  commentError,
+  commentsLoading,
   submitError,
   isSubmitting,
   isDeadlineClosed,
@@ -327,6 +337,8 @@ function AssignmentDetailPage({
   privateComments: AssignmentComment[];
   commentDraft: string;
   privateComment: string;
+  commentError: string;
+  commentsLoading: boolean;
   submitError: string;
   isSubmitting: boolean;
   isDeadlineClosed: boolean;
@@ -404,6 +416,7 @@ function AssignmentDetailPage({
                 draft={commentDraft}
                 placeholder="Tulis komentar..."
                 emptyText="Belum ada komentar."
+                isLoading={commentsLoading}
                 onChangeDraft={onChangeCommentDraft}
                 onSend={onSendComment}
               />
@@ -485,9 +498,11 @@ function AssignmentDetailPage({
                 placeholder="Tulis komentar pribadi..."
                 emptyText="Belum ada komentar pribadi."
                 compact
+                isLoading={commentsLoading}
                 onChangeDraft={onChangePrivateComment}
                 onSend={onSendPrivateComment}
               />
+              {commentError && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{commentError}</p>}
             </div>
           </Card>
         </div>
@@ -502,6 +517,7 @@ function CommentBox({
   placeholder,
   emptyText,
   compact,
+  isLoading,
   onChangeDraft,
   onSend
 }: {
@@ -510,13 +526,16 @@ function CommentBox({
   placeholder: string;
   emptyText: string;
   compact?: boolean;
+  isLoading?: boolean;
   onChangeDraft: (value: string) => void;
-  onSend: () => void;
+  onSend: () => void | Promise<void>;
 }) {
   return (
     <div className="space-y-4">
       <div className={`space-y-3 ${compact ? "max-h-48" : "max-h-64"} overflow-y-auto pr-1`}>
-        {comments.length === 0 ? (
+        {isLoading ? (
+          <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">Memuat komentar...</p>
+        ) : comments.length === 0 ? (
           <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">{emptyText}</p>
         ) : (
           comments.map((comment) => (
@@ -548,16 +567,12 @@ function CommentBox({
   );
 }
 
-function appendComment(items: Record<string, AssignmentComment[]>, assignmentId: string, text: string) {
+function appendComment(items: Record<string, AssignmentComment[]>, assignmentId: string, comment: AssignmentComment) {
   return {
     ...items,
     [assignmentId]: [
       ...(items[assignmentId] ?? []),
-      {
-        id: crypto.randomUUID(),
-        text,
-        createdAt: new Date().toISOString()
-      }
+      comment
     ]
   };
 }
