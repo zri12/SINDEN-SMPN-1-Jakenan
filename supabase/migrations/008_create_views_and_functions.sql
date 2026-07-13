@@ -1,5 +1,13 @@
 -- SINDEN 008 - reporting views and helper functions
 
+drop view if exists public.teacher_submission_status_view cascade;
+drop view if exists public.student_assignment_status_view cascade;
+drop view if exists public.student_grade_summary cascade;
+drop view if exists public.assignment_submission_summary cascade;
+drop view if exists public.classes_with_student_count cascade;
+drop view if exists public.dashboard_summary cascade;
+drop view if exists public.grade_summary cascade;
+
 create or replace view public.classes_with_student_count
 with (security_invoker = true)
 as
