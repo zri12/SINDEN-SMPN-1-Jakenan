@@ -1,5 +1,6 @@
 import { ClipboardCheck, FileText, School, Users } from "lucide-react";
 import { Card } from "@/components/common/Card";
+import { Loading } from "@/components/common/Loading";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SummaryCard } from "@/components/dashboard/SummaryCard";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -11,10 +12,12 @@ import { useSubmissionStatuses } from "@/hooks/useSubmissionStatuses";
 import { calculateAverage } from "@/utils/calculateGrade";
 
 export function TeacherDashboard() {
-  const { classes } = useClasses();
-  const { assignments } = useAssignments();
-  const { submissions } = useSubmissionStatuses();
-  const { grades } = useGrades();
+  const { classes, isLoading: classesLoading, error: classesError } = useClasses();
+  const { assignments, isLoading: assignmentsLoading, error: assignmentsError } = useAssignments();
+  const { submissions, isLoading: submissionsLoading, error: submissionsError } = useSubmissionStatuses();
+  const { grades, isLoading: gradesLoading, error: gradesError } = useGrades();
+  const isLoading = classesLoading || assignmentsLoading || submissionsLoading || gradesLoading;
+  const error = classesError || assignmentsError || submissionsError || gradesError;
   const activeAssignments = assignments.filter((item) => item.status === "active");
   const submitted = submissions.filter((item) => item.status === "submitted" || item.status === "late").length;
   const pending = submissions.filter((item) => item.status === "not_submitted").length;
@@ -23,6 +26,12 @@ export function TeacherDashboard() {
   return (
     <div>
       <PageHeader title="Dashboard Guru" description="Ringkasan kelas, nilai, dan tugas yang sedang berjalan." />
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <Card><p className="text-sm text-red-600">{error}</p></Card>
+      ) : (
+        <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Kelas Diajar" value={classes.length} icon={School} color="#2563eb" />
         <StatCard title="Tugas Aktif" value={activeAssignments.length} icon={FileText} color="#16a34a" />
@@ -36,6 +45,8 @@ export function TeacherDashboard() {
           <SummaryCard label="Rata-rata Kelas" value={average} />
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

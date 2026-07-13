@@ -1,5 +1,6 @@
 import { BookOpen, ClipboardList, FileText, School, UserCheck, Users } from "lucide-react";
 import { ActivityList } from "@/components/dashboard/ActivityList";
+import { Loading } from "@/components/common/Loading";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SummaryCard } from "@/components/dashboard/SummaryCard";
@@ -13,12 +14,14 @@ import { useTeachers } from "@/hooks/useTeachers";
 import { calculateAverage } from "@/utils/calculateGrade";
 
 export function AdminDashboard() {
-  const { students } = useStudents();
-  const { teachers } = useTeachers();
-  const { classes } = useClasses();
-  const { subjects } = useSubjects();
-  const { grades } = useGrades();
-  const { assignments } = useAssignments();
+  const { students, isLoading: studentsLoading, error: studentsError } = useStudents();
+  const { teachers, isLoading: teachersLoading, error: teachersError } = useTeachers();
+  const { classes, isLoading: classesLoading, error: classesError } = useClasses();
+  const { subjects, isLoading: subjectsLoading, error: subjectsError } = useSubjects();
+  const { grades, isLoading: gradesLoading, error: gradesError } = useGrades();
+  const { assignments, isLoading: assignmentsLoading, error: assignmentsError } = useAssignments();
+  const isLoading = studentsLoading || teachersLoading || classesLoading || subjectsLoading || gradesLoading || assignmentsLoading;
+  const error = studentsError || teachersError || classesError || subjectsError || gradesError || assignmentsError;
 
   const scores = grades.map((grade) => grade.score);
   const average = scores.length ? calculateAverage(scores).toFixed(1) : "0";
@@ -32,6 +35,12 @@ export function AdminDashboard() {
   return (
     <div>
       <PageHeader title="Dashboard Admin" description="Ringkasan sistem akademik SMP Negeri 1 Jakenan" />
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+      ) : (
+        <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Total Siswa" value={students.length} icon={Users} color="#2563eb" subtitle="Data aktif" />
         <StatCard title="Total Guru" value={teachers.length} icon={UserCheck} color="#16a34a" subtitle="Guru pengajar" />
@@ -61,6 +70,8 @@ export function AdminDashboard() {
         <SummaryCard label="Nilai Masuk" value={grades.length} />
         <SummaryCard label="Tugas Terdata" value={assignments.length} />
       </div>
+        </>
+      )}
     </div>
   );
 }

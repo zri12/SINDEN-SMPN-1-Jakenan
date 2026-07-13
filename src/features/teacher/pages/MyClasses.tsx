@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/common/Badge";
 import { Card } from "@/components/common/Card";
 import { EmptyState } from "@/components/common/EmptyState";
+import { Loading } from "@/components/common/Loading";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StudentTable } from "@/components/tables/StudentTable";
 import { useClasses } from "@/hooks/useClasses";
@@ -11,9 +12,9 @@ import { useSubjects } from "@/hooks/useSubjects";
 import { getCurrentTeacherProfile } from "@/services/profileService";
 
 export function MyClasses() {
-  const { classes } = useClasses();
-  const { students } = useStudents();
-  const { subjects } = useSubjects();
+  const { classes, isLoading: classesLoading, error: classesError } = useClasses();
+  const { students, isLoading: studentsLoading, error: studentsError } = useStudents();
+  const { subjects, isLoading: subjectsLoading, error: subjectsError } = useSubjects();
   const [selectedClassId, setSelectedClassId] = useState("");
   const [teacherSubjectNames, setTeacherSubjectNames] = useState<string[]>([]);
 
@@ -37,6 +38,8 @@ export function MyClasses() {
   }, []);
 
   const selected = classes.find((item) => item.id === selectedClassId);
+  const isLoading = classesLoading || studentsLoading || subjectsLoading;
+  const error = classesError || studentsError || subjectsError;
   const classStudents = useMemo(() => students.filter((item) => item.classId === selectedClassId), [students, selectedClassId]);
   const subjectNames = teacherSubjectNames.length ? teacherSubjectNames : subjects.map((subject) => subject.name);
   const subjectPreview = subjectNames.length ? subjectNames.slice(0, 2).join(", ") : "-";
@@ -51,7 +54,11 @@ export function MyClasses() {
   return (
     <div>
       <PageHeader title="Kelas Saya" description="Kelas dan daftar siswa yang diajar." />
-      {classes.length === 0 ? (
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <Card><p className="text-sm text-red-600">{error}</p></Card>
+      ) : classes.length === 0 ? (
         <EmptyState title="Belum ada kelas" description="Kelas yang tampil mengikuti relasi guru, kelas, dan mata pelajaran di Supabase." />
       ) : (
         <div className="grid gap-4 2xl:grid-cols-[360px_minmax(0,1fr)]">

@@ -1,4 +1,5 @@
 import { Card } from "@/components/common/Card";
+import { Loading } from "@/components/common/Loading";
 import { SimpleChart } from "@/components/dashboard/SimpleChart";
 import { SummaryCard } from "@/components/dashboard/SummaryCard";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -7,8 +8,10 @@ import { useGrades } from "@/hooks/useGrades";
 import { calculateAverage } from "@/utils/calculateGrade";
 
 export function GradeRecap() {
-  const { grades } = useGrades();
-  const { classes } = useClasses();
+  const { grades, isLoading: gradesLoading, error: gradesError } = useGrades();
+  const { classes, isLoading: classesLoading, error: classesError } = useClasses();
+  const isLoading = gradesLoading || classesLoading;
+  const error = gradesError || classesError;
   const scores = grades.map((grade) => grade.score);
   const highest = scores.length ? Math.max(...scores) : 0;
   const lowest = scores.length ? Math.min(...scores) : 0;
@@ -20,6 +23,12 @@ export function GradeRecap() {
   return (
     <div>
       <PageHeader title="Rekap Nilai" description="Rekap nilai berdasarkan data Supabase." />
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <Card><p className="text-sm text-red-600">{error}</p></Card>
+      ) : (
+        <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard label="Rata-rata" value={scores.length ? calculateAverage(scores).toFixed(1) : "0"} />
         <SummaryCard label="Nilai Tertinggi" value={highest} tone="success" />
@@ -33,6 +42,8 @@ export function GradeRecap() {
           <p className="text-sm leading-6 text-slate-500">Data rekap mengikuti tabel grades. Perubahan nilai akan tetap tersimpan dan tampil lagi setelah refresh.</p>
         </Card>
       </div>
+        </>
+      )}
     </div>
   );
 }
