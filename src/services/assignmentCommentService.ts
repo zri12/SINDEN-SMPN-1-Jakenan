@@ -1,5 +1,5 @@
 import { getCurrentStudent } from "@/services/studentService";
-import { getSupabase, handleSupabaseError } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, requireSupabase } from "./serviceUtils";
 
 export type AssignmentCommentVisibility = "public" | "private";
 
@@ -26,17 +26,7 @@ export async function getAssignmentComments(assignmentId: string) {
 }
 
 export async function createAssignmentComment(assignmentId: string, text: string, visibility: AssignmentCommentVisibility) {
-  const client = getSupabase();
-  if (!client) {
-    return {
-      id: crypto.randomUUID(),
-      assignmentId,
-      studentId: "",
-      text,
-      visibility,
-      createdAt: new Date().toISOString()
-    } satisfies AssignmentComment;
-  }
+  const client = requireSupabase();
 
   const student = await getCurrentStudent();
   if (!student.id || !student.profileId) {

@@ -1,5 +1,5 @@
 import type { Announcement } from "@/types/submission";
-import { getSupabase, handleSupabaseError } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, requireSupabase } from "./serviceUtils";
 
 export async function getAnnouncements() {
   const client = getSupabase();
@@ -11,8 +11,7 @@ export async function getAnnouncements() {
 }
 
 export async function createAnnouncement(announcement: Announcement) {
-  const client = getSupabase();
-  if (!client) return announcement;
+  const client = requireSupabase();
 
   const { data, error } = await client.from("announcements").insert({
     title: announcement.title,

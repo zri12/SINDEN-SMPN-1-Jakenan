@@ -4,6 +4,14 @@ export function getSupabase() {
   return isSupabaseConfigured ? supabase : null;
 }
 
+export function requireSupabase() {
+  const client = getSupabase();
+  if (!client) {
+    throw new Error("Supabase belum dikonfigurasi. Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY.");
+  }
+  return client;
+}
+
 export function handleSupabaseError(error: unknown, fallbackMessage: string): never {
   if (error instanceof Error) {
     throw new Error(error.message);

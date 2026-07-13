@@ -1,5 +1,5 @@
 import type { Student } from "@/types/student";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getStudents() {
   const client = getSupabase();
@@ -50,8 +50,7 @@ export async function getCurrentStudent() {
 }
 
 export async function createStudent(student: Student) {
-  const client = getSupabase();
-  if (!client) return student;
+  const client = requireSupabase();
 
   const { data, error } = await client.from("students").insert(toStudentRow(student)).select("*, profiles(username), classes(id, name)").single();
   if (error) handleSupabaseError(error, "Data siswa gagal disimpan.");
@@ -59,8 +58,7 @@ export async function createStudent(student: Student) {
 }
 
 export async function updateStudent(id: string, student: Partial<Student>) {
-  const client = getSupabase();
-  if (!client) return { id, ...student };
+  const client = requireSupabase();
 
   const { data, error } = await client.from("students").update(toStudentRow(student)).eq("id", id).select("*, profiles(username), classes(id, name)").single();
   if (error) handleSupabaseError(error, "Data siswa gagal diperbarui.");
@@ -68,8 +66,7 @@ export async function updateStudent(id: string, student: Partial<Student>) {
 }
 
 export async function deleteStudent(id: string) {
-  const client = getSupabase();
-  if (!client) return { id };
+  const client = requireSupabase();
 
   const { error } = await client.from("students").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Data siswa gagal dihapus.");

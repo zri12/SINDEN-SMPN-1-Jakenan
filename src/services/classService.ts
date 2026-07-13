@@ -1,5 +1,5 @@
 import type { ClassRoom } from "@/types/class";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getClasses() {
   const client = getSupabase();
@@ -11,8 +11,7 @@ export async function getClasses() {
 }
 
 export async function createClass(classRoom: ClassRoom) {
-  const client = getSupabase();
-  if (!client) return classRoom;
+  const client = requireSupabase();
 
   const { data, error } = await client
     .from("classes")
@@ -24,8 +23,7 @@ export async function createClass(classRoom: ClassRoom) {
 }
 
 export async function updateClass(id: string, classRoom: Partial<ClassRoom>) {
-  const client = getSupabase();
-  if (!client) return { id, ...classRoom };
+  const client = requireSupabase();
 
   const { data, error } = await client
     .from("classes")
@@ -38,8 +36,7 @@ export async function updateClass(id: string, classRoom: Partial<ClassRoom>) {
 }
 
 export async function deleteClass(id: string) {
-  const client = getSupabase();
-  if (!client) return { id };
+  const client = requireSupabase();
 
   const { error } = await client.from("classes").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Data kelas gagal dihapus.");

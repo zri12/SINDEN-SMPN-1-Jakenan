@@ -1,6 +1,6 @@
 import type { Assignment } from "@/types/assignment";
 import { createSignedUrl } from "@/lib/storage";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getAssignments() {
   const client = getSupabase();
@@ -15,8 +15,7 @@ export async function getAssignments() {
 }
 
 export async function createAssignment(assignment: Assignment) {
-  const client = getSupabase();
-  if (!client) return assignment;
+  const client = requireSupabase();
 
   const { data, error } = await client.from("assignments").insert(toAssignmentRow(assignment)).select("*, teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Tugas gagal disimpan.");
@@ -24,8 +23,7 @@ export async function createAssignment(assignment: Assignment) {
 }
 
 export async function updateAssignment(id: string, assignment: Partial<Assignment>) {
-  const client = getSupabase();
-  if (!client) return { id, ...assignment };
+  const client = requireSupabase();
 
   const { data, error } = await client.from("assignments").update(toAssignmentRow(assignment)).eq("id", id).select("*, teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Tugas gagal diperbarui.");
@@ -33,8 +31,7 @@ export async function updateAssignment(id: string, assignment: Partial<Assignmen
 }
 
 export async function deleteAssignment(id: string) {
-  const client = getSupabase();
-  if (!client) return { id };
+  const client = requireSupabase();
 
   const { error } = await client.from("assignments").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Tugas gagal dihapus.");

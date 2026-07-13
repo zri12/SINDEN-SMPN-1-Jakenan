@@ -1,6 +1,6 @@
 import { appConfig } from "@/constants/appConfig";
 import type { AppSettings } from "@/types/user";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 const fallbackSettings: AppSettings = {
   id: "local-settings",
@@ -29,8 +29,7 @@ export async function getSettings() {
 }
 
 export async function updateSettings(settings: Partial<AppSettings>) {
-  const client = getSupabase();
-  if (!client) return { ...fallbackSettings, ...settings };
+  const client = requireSupabase();
 
   const payload = omitUndefined({
     app_name: settings.appName,

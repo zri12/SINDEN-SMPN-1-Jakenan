@@ -1,5 +1,5 @@
 import type { Teacher } from "@/types/teacher";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getTeachers() {
   const client = getSupabase();
@@ -11,8 +11,7 @@ export async function getTeachers() {
 }
 
 export async function createTeacher(teacher: Teacher) {
-  const client = getSupabase();
-  if (!client) return teacher;
+  const client = requireSupabase();
 
   const { data, error } = await client.from("teachers").insert(toTeacherRow(teacher)).select("id").single();
   if (error) handleSupabaseError(error, "Data guru gagal disimpan.");
@@ -21,8 +20,7 @@ export async function createTeacher(teacher: Teacher) {
 }
 
 export async function updateTeacher(id: string, teacher: Partial<Teacher>) {
-  const client = getSupabase();
-  if (!client) return { id, ...teacher };
+  const client = requireSupabase();
 
   const { error } = await client.from("teachers").update(toTeacherRow(teacher)).eq("id", id);
   if (error) handleSupabaseError(error, "Data guru gagal diperbarui.");
@@ -31,8 +29,7 @@ export async function updateTeacher(id: string, teacher: Partial<Teacher>) {
 }
 
 export async function deleteTeacher(id: string) {
-  const client = getSupabase();
-  if (!client) return { id };
+  const client = requireSupabase();
 
   const { error } = await client.from("teachers").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Data guru gagal dihapus.");
@@ -86,7 +83,8 @@ async function syncTeacherClasses(teacherId: string, teacher: Partial<Teacher>) 
   const classNames = teacher.classNames ?? [];
   const subjectNames = splitNames(teacher.subjectName ?? "");
 
-  await client.from("teacher_classes").delete().eq("teacher_id", teacherId);
+  const { error: deleteError } = await client.from("teacher_classes").delete().eq("teacher_id", teacherId);
+  if (deleteError) handleSupabaseError(deleteError, "Relasi guru lama gagal dihapus.");
   if (classNames.length === 0 || subjectNames.length === 0) return;
 
   const [{ data: classes, error: classError }, { data: subjects, error: subjectError }] = await Promise.all([

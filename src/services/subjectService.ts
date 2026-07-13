@@ -1,5 +1,5 @@
 import type { Subject } from "@/types/subject";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getSubjects() {
   const client = getSupabase();
@@ -11,8 +11,7 @@ export async function getSubjects() {
 }
 
 export async function createSubject(subject: Subject) {
-  const client = getSupabase();
-  if (!client) return subject;
+  const client = requireSupabase();
 
   const { data, error } = await client
     .from("subjects")
@@ -24,8 +23,7 @@ export async function createSubject(subject: Subject) {
 }
 
 export async function updateSubject(id: string, subject: Partial<Subject>) {
-  const client = getSupabase();
-  if (!client) return { id, ...subject };
+  const client = requireSupabase();
 
   const { data, error } = await client
     .from("subjects")
@@ -38,8 +36,7 @@ export async function updateSubject(id: string, subject: Partial<Subject>) {
 }
 
 export async function deleteSubject(id: string) {
-  const client = getSupabase();
-  if (!client) return { id };
+  const client = requireSupabase();
 
   const { error } = await client.from("subjects").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Mata pelajaran gagal dihapus.");

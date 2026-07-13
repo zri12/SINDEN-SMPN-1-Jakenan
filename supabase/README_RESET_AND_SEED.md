@@ -9,6 +9,7 @@ File reset final:
 File ini menghapus data demo/transaksi berikut:
 
 - `grades`
+- `assignment_comments`
 - `submissions`
 - `assignments`
 - `announcements`

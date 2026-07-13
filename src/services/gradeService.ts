@@ -1,5 +1,5 @@
 import type { Grade } from "@/types/grade";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getGrades() {
   const client = getSupabase();
@@ -14,8 +14,7 @@ export async function getGrades() {
 }
 
 export async function createGrade(grade: Grade) {
-  const client = getSupabase();
-  if (!client) return grade;
+  const client = requireSupabase();
 
   const query = grade.submissionId
     ? client.from("grades").upsert(toGradeRow(grade), { onConflict: "submission_id" })
@@ -30,8 +29,7 @@ export async function createGrade(grade: Grade) {
 }
 
 export async function updateGrade(id: string, grade: Partial<Grade>) {
-  const client = getSupabase();
-  if (!client) return { id, ...grade };
+  const client = requireSupabase();
 
   const { data, error } = await client.from("grades").update(toGradeRow(grade)).eq("id", id).select("*, students(full_name), teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Nilai gagal diperbarui.");
@@ -39,8 +37,7 @@ export async function updateGrade(id: string, grade: Partial<Grade>) {
 }
 
 export async function deleteGrade(id: string) {
-  const client = getSupabase();
-  if (!client) return { id };
+  const client = requireSupabase();
 
   const { error } = await client.from("grades").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Nilai gagal dihapus.");
@@ -86,8 +83,7 @@ function toGradeRow(grade: Partial<Grade>) {
 }
 
 async function markSubmissionReviewed(submissionId: string) {
-  const client = getSupabase();
-  if (!client) return;
+  const client = requireSupabase();
 
   const { error } = await client
     .from("submissions")

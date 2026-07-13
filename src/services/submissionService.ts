@@ -1,6 +1,6 @@
 import type { Submission } from "@/types/submission";
 import { createSignedUrl } from "@/lib/storage";
-import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getSubmissions() {
   const client = getSupabase();
@@ -15,8 +15,7 @@ export async function getSubmissions() {
 }
 
 export async function createSubmission(submission: Submission) {
-  const client = getSupabase();
-  if (!client) return submission;
+  const client = requireSupabase();
 
   const { data, error } = await client
     .from("submissions")
@@ -28,8 +27,7 @@ export async function createSubmission(submission: Submission) {
 }
 
 export async function updateSubmission(id: string, submission: Partial<Submission>) {
-  const client = getSupabase();
-  if (!client) return { id, ...submission };
+  const client = requireSupabase();
 
   const { data, error } = await client.from("submissions").update(toSubmissionRow(submission)).eq("id", id).select("*, assignments(title, teacher_id, class_id, subject_id, subjects(name, kkm)), students(full_name, class_id, classes(name))").single();
   if (error) handleSupabaseError(error, "Pengumpulan tugas gagal diperbarui.");
