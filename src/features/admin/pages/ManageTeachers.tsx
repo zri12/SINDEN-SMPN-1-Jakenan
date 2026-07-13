@@ -14,12 +14,13 @@ import { TeacherTable } from "@/components/tables/TeacherTable";
 import { useClasses } from "@/hooks/useClasses";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useTeachers } from "@/hooks/useTeachers";
+import { resetUserPassword } from "@/services/adminService";
 import { createTeacher, deleteTeacher as removeTeacher, updateTeacher } from "@/services/teacherService";
 import type { ClassRoom } from "@/types/class";
 import type { Subject } from "@/types/subject";
 import type { Teacher } from "@/types/teacher";
 
-type ModalMode = "create" | "view" | "edit" | "delete";
+type ModalMode = "create" | "view" | "edit" | "delete" | "reset";
 
 export function ManageTeachers() {
   const { teachers, isLoading, error, refetch } = useTeachers();
@@ -30,6 +31,8 @@ export function ManageTeachers() {
   const [selected, setSelected] = useState<Teacher | null>(null);
   const [form, setForm] = useState<Teacher>(emptyTeacher());
   const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
+  const [passwordForm, setPasswordForm] = useState({ password: "", confirm: "" });
   const [isSaving, setIsSaving] = useState(false);
 
   const filtered = useMemo(
@@ -41,6 +44,7 @@ export function ManageTeachers() {
     setSelected(null);
     setForm(emptyTeacher(classes[0], subjects[0]));
     setActionError("");
+    setActionSuccess("");
     setModalMode("create");
   };
 
@@ -48,6 +52,7 @@ export function ManageTeachers() {
     setSelected(teacher);
     setForm(teacher);
     setActionError("");
+    setActionSuccess("");
     setModalMode("edit");
   };
 
@@ -84,6 +89,33 @@ export function ManageTeachers() {
     }
   };
 
+  const resetPassword = async () => {
+    if (!selected?.profileId) {
+      setActionError("Guru belum terhubung ke akun login.");
+      return;
+    }
+    if (passwordForm.password.length < 8) {
+      setActionError("Password minimal 8 karakter");
+      return;
+    }
+    if (passwordForm.password !== passwordForm.confirm) {
+      setActionError("Konfirmasi password harus sama.");
+      return;
+    }
+    setIsSaving(true);
+    setActionError("");
+    setActionSuccess("");
+    try {
+      await resetUserPassword(selected.profileId, passwordForm.password);
+      setActionSuccess("Password berhasil diperbarui");
+      setPasswordForm({ password: "", confirm: "" });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Password gagal diperbarui.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div>
       <PageHeader title="Data Guru" actions={<Button onClick={openCreate}><Plus className="h-4 w-4" />Tambah Guru</Button>} />
@@ -106,11 +138,18 @@ export function ManageTeachers() {
               setActionError("");
               setModalMode("delete");
             }}
+            onResetPassword={(teacher) => {
+              setSelected(teacher);
+              setPasswordForm({ password: "", confirm: "" });
+              setActionError("");
+              setActionSuccess("");
+              setModalMode("reset");
+            }}
           />
         )}
       </Card>
       {(modalMode === "create" || modalMode === "edit") && (
-        <Modal title={modalMode === "create" ? "Tambah Guru" : "Edit Guru"} onClose={() => setModalMode(null)}>
+        <Modal title={modalMode === "create" ? "Tambah Data Guru" : "Edit Data Guru"} onClose={() => setModalMode(null)}>
           <TeacherEditor classes={classes} subjects={subjects} form={form} setForm={setForm} error={actionError} isSaving={isSaving} onCancel={() => setModalMode(null)} onSave={saveTeacher} />
         </Modal>
       )}
@@ -118,12 +157,34 @@ export function ManageTeachers() {
         <Modal title="Detail Guru" onClose={() => setModalMode(null)}>
           <DetailGrid items={[
             { label: "Nama", value: selected.fullName },
-            { label: "NIP/NUPTK", value: selected.nip || selected.nuptk || "-" },
+            { label: "NIP", value: selected.nip || "-" },
+            { label: "NUPTK", value: selected.nuptk || "-" },
+            { label: "Jenis Kelamin", value: selected.gender === "P" ? "Perempuan" : selected.gender === "L" ? "Laki-laki" : "-" },
+            { label: "Status Kepegawaian", value: selected.employmentStatus || "-" },
+            { label: "Jenis PTK", value: selected.teacherType || "-" },
             { label: "Mata Pelajaran", value: selected.subjectName },
             { label: "Kelas Diajar", value: selected.classNames.join(", ") || "-" },
+            { label: "No HP", value: selected.phone || "-" },
+            { label: "Email / Gmail", value: selected.email || "-" },
             { label: "Username", value: selected.username || "-" },
             { label: "Status", value: selected.status === "active" ? "Aktif" : "Nonaktif" }
           ]} />
+        </Modal>
+      )}
+      {modalMode === "reset" && selected && (
+        <Modal title="Reset Password" onClose={() => setModalMode(null)}>
+          <ResetPasswordPanel
+            name={selected.fullName}
+            identifier={[selected.nip, selected.nuptk].filter(Boolean).join(" / ") || "-"}
+            password={passwordForm.password}
+            confirm={passwordForm.confirm}
+            error={actionError}
+            success={actionSuccess}
+            isSaving={isSaving}
+            onChange={setPasswordForm}
+            onCancel={() => setModalMode(null)}
+            onSave={resetPassword}
+          />
         </Modal>
       )}
       {modalMode === "delete" && selected && (
@@ -137,7 +198,7 @@ export function ManageTeachers() {
 }
 
 function emptyTeacher(classRoom?: ClassRoom, subject?: Subject): Teacher {
-  return { id: "", nip: "", fullName: "", subjectName: subject?.name ?? "", classNames: classRoom?.name ? [classRoom.name] : [], username: "", status: "active" };
+  return { id: "", nip: "", nuptk: "", fullName: "", gender: "L", employmentStatus: "", teacherType: "", phone: "", email: "", subjectName: subject?.name ?? "", classNames: classRoom?.name ? [classRoom.name] : [], username: "", status: "active" };
 }
 
 function TeacherEditor({ classes, subjects, form, setForm, error, isSaving, onCancel, onSave }: { classes: ClassRoom[]; subjects: Subject[]; form: Teacher; setForm: (teacher: Teacher) => void; error: string; isSaving: boolean; onCancel: () => void; onSave: () => void }) {
@@ -158,9 +219,14 @@ function TeacherEditor({ classes, subjects, form, setForm, error, isSaving, onCa
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       <Input label="Nama Guru" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="NIP/NUPTK" value={form.nip ?? ""} onChange={(event) => setForm({ ...form, nip: event.target.value })} />
-        <Input label="Username Akun" value={form.username} disabled className="text-slate-400" />
-        <Select label="Status" value={form.status} options={[{ value: "active", label: "Aktif" }, { value: "inactive", label: "Nonaktif" }]} onChange={(event) => setForm({ ...form, status: event.target.value as Teacher["status"] })} />
+        <Input label="NIP" value={form.nip ?? ""} onChange={(event) => setForm({ ...form, nip: event.target.value })} />
+        <Input label="NUPTK" value={form.nuptk ?? ""} onChange={(event) => setForm({ ...form, nuptk: event.target.value })} />
+        <Select label="Jenis Kelamin" value={form.gender ?? "L"} options={[{ value: "L", label: "Laki-laki" }, { value: "P", label: "Perempuan" }]} onChange={(event) => setForm({ ...form, gender: event.target.value as "L" | "P" })} />
+        <Input label="Status Kepegawaian" value={form.employmentStatus ?? ""} onChange={(event) => setForm({ ...form, employmentStatus: event.target.value })} placeholder="PNS / PPPK / Honorer" />
+        <Input label="Jenis PTK" value={form.teacherType ?? ""} onChange={(event) => setForm({ ...form, teacherType: event.target.value })} placeholder="Guru Mata Pelajaran" />
+        <Input label="No HP" value={form.phone ?? ""} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+        <Input label="Email / Gmail" value={form.email ?? ""} disabled className="text-slate-400" />
+        <Select label="Status Akun" value={form.status} options={[{ value: "active", label: "Aktif" }, { value: "inactive", label: "Tidak Aktif" }]} onChange={(event) => setForm({ ...form, status: event.target.value as Teacher["status"] })} />
       </div>
 
       <div>
@@ -189,7 +255,26 @@ function TeacherEditor({ classes, subjects, form, setForm, error, isSaving, onCa
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
-        <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan"}</Button>
+        <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan Guru"}</Button>
+      </div>
+    </div>
+  );
+}
+
+function ResetPasswordPanel({ name, identifier, password, confirm, error, success, isSaving, onChange, onCancel, onSave }: { name: string; identifier: string; password: string; confirm: string; error: string; success: string; isSaving: boolean; onChange: (value: { password: string; confirm: string }) => void; onCancel: () => void; onSave: () => void }) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">
+        <p className="font-semibold">{name}</p>
+        <p>Identifier login: {identifier}</p>
+      </div>
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {success && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{success}</p>}
+      <Input label="Password Baru" type="password" value={password} onChange={(event) => onChange({ password: event.target.value, confirm })} />
+      <Input label="Konfirmasi Password" type="password" value={confirm} onChange={(event) => onChange({ password, confirm: event.target.value })} />
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
+        <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan Password"}</Button>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ export async function getStudents() {
   const client = getSupabase();
   if (!client) return [];
 
-  const { data, error } = await client.from("students").select("*, profiles(username), classes(id, name)").order("full_name");
+  const { data, error } = await client.from("students").select("*, profiles(username, email), classes(id, name)").order("full_name");
   if (error) handleSupabaseError(error, "Data siswa gagal dimuat.");
   return (data ?? []).map(mapStudent);
 }
@@ -20,7 +20,7 @@ export async function getCurrentStudent() {
 
   const { data: profile, error: profileError } = await client
     .from("profiles")
-    .select("id, full_name, username, is_active")
+    .select("id, full_name, username, email, is_active")
     .eq("id", authData.user.id)
     .maybeSingle();
   if (profileError) handleSupabaseError(profileError, "Profile siswa gagal dimuat.");
@@ -28,7 +28,7 @@ export async function getCurrentStudent() {
 
   const { data, error } = await client
     .from("students")
-    .select("*, profiles(username), classes(id, name)")
+    .select("*, profiles(username, email), classes(id, name)")
     .eq("profile_id", authData.user.id)
     .order("updated_at", { ascending: false })
     .limit(1);
@@ -45,6 +45,7 @@ export async function getCurrentStudent() {
     className: "-",
     gender: "L",
     username: profile.username ?? "",
+    email: profile.email ?? "",
     status: profile.is_active ? "active" : "inactive"
   } satisfies Student;
 }
@@ -52,7 +53,8 @@ export async function getCurrentStudent() {
 export async function createStudent(student: Student) {
   const client = requireSupabase();
 
-  const { data, error } = await client.from("students").insert(toStudentRow(student)).select("*, profiles(username), classes(id, name)").single();
+  validateStudent(student);
+  const { data, error } = await client.from("students").insert(toStudentRow(student)).select("*, profiles(username, email), classes(id, name)").single();
   if (error) handleSupabaseError(error, "Data siswa gagal disimpan.");
   return mapStudent(data);
 }
@@ -60,7 +62,8 @@ export async function createStudent(student: Student) {
 export async function updateStudent(id: string, student: Partial<Student>) {
   const client = requireSupabase();
 
-  const { data, error } = await client.from("students").update(toStudentRow(student)).eq("id", id).select("*, profiles(username), classes(id, name)").single();
+  validateStudent(student);
+  const { data, error } = await client.from("students").update(toStudentRow(student)).eq("id", id).select("*, profiles(username, email), classes(id, name)").single();
   if (error) handleSupabaseError(error, "Data siswa gagal diperbarui.");
   return mapStudent(data);
 }
@@ -83,8 +86,12 @@ function mapStudent(row: any): Student {
     classId: row.class_id ?? "",
     className: row.classes?.name ?? "-",
     gender: row.gender ?? "L",
+    birthPlace: row.birth_place ?? "",
+    birthDate: row.birth_date ?? "",
+    address: row.address ?? "",
     username: row.profiles?.username ?? "",
-    status: row.status === "active" ? "active" : "inactive"
+    email: row.profiles?.email ?? "",
+    status: row.status === "graduated" ? "graduated" : row.status === "active" ? "active" : "inactive"
   };
 }
 
@@ -95,6 +102,19 @@ function toStudentRow(student: Partial<Student>) {
     full_name: student.fullName,
     class_id: student.classId,
     gender: student.gender,
+    birth_place: student.birthPlace,
+    birth_date: student.birthDate || undefined,
+    address: student.address,
     status: student.status
   });
+}
+
+function validateStudent(student: Partial<Student>) {
+  if ("fullName" in student && !student.fullName?.trim()) throw new Error("Nama siswa wajib diisi.");
+  if ("nisn" in student && !student.nisn?.trim()) throw new Error("NISN wajib diisi.");
+  if ("classId" in student && !student.classId) throw new Error("Kelas wajib dipilih.");
+  if (student.birthDate) {
+    const date = new Date(student.birthDate);
+    if (Number.isNaN(date.getTime())) throw new Error("Tanggal lahir tidak valid.");
+  }
 }

@@ -5,7 +5,7 @@ export async function getTeachers() {
   const client = getSupabase();
   if (!client) return [];
 
-  const { data, error } = await client.from("teachers").select("*, profiles(username), teacher_classes(classes(id, name), subjects(id, name))").order("full_name");
+  const { data, error } = await client.from("teachers").select("*, profiles(username, email), teacher_classes(classes(id, name), subjects(id, name))").order("full_name");
   if (error) handleSupabaseError(error, "Data guru gagal dimuat.");
   return (data ?? []).map(mapTeacher);
 }
@@ -47,6 +47,11 @@ function mapTeacher(row: any): Teacher {
     nip: row.nip ?? "",
     nuptk: row.nuptk ?? "",
     fullName: row.full_name,
+    gender: row.gender ?? undefined,
+    employmentStatus: row.employment_status ?? "",
+    teacherType: row.teacher_type ?? "",
+    phone: row.phone ?? "",
+    email: row.profiles?.email ?? "",
     subjectName: subjectNames.join(", ") || "-",
     classNames,
     username: row.profiles?.username ?? "",
@@ -59,6 +64,10 @@ function toTeacherRow(teacher: Partial<Teacher>) {
     nip: teacher.nip,
     nuptk: teacher.nuptk,
     full_name: teacher.fullName,
+    gender: teacher.gender,
+    employment_status: teacher.employmentStatus,
+    teacher_type: teacher.teacherType,
+    phone: teacher.phone,
     status: teacher.status
   });
 }
@@ -69,7 +78,7 @@ async function getTeacherById(id: string) {
 
   const { data, error } = await client
     .from("teachers")
-    .select("*, profiles(username), teacher_classes(classes(id, name), subjects(id, name))")
+    .select("*, profiles(username, email), teacher_classes(classes(id, name), subjects(id, name))")
     .eq("id", id)
     .single();
   if (error) handleSupabaseError(error, "Data guru gagal dimuat.");

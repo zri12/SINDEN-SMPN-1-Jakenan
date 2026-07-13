@@ -9,6 +9,11 @@ export interface TeacherProfileData {
   username: string;
   email: string;
   phone: string;
+  nip: string;
+  nuptk: string;
+  gender: "L" | "P" | "";
+  employmentStatus: string;
+  teacherType: string;
   subjectIds: string[];
   subjectNames: string[];
   classIds: string[];
@@ -38,7 +43,7 @@ export async function getCurrentTeacherProfile(): Promise<TeacherProfileData> {
 
   const { data: profile, error: profileError } = await client
     .from("profiles")
-    .select("id, full_name, username, phone, is_active")
+    .select("id, full_name, username, email, phone, is_active")
     .eq("id", authData.user.id)
     .maybeSingle();
 
@@ -47,7 +52,7 @@ export async function getCurrentTeacherProfile(): Promise<TeacherProfileData> {
 
   const { data: teacherRows, error } = await client
     .from("teachers")
-    .select("id, profile_id, full_name, phone, status, profiles(id, full_name, username, phone, is_active), teacher_classes(class_id, subject_id, academic_year, semester, classes(id, name), subjects(id, name))")
+    .select("id, profile_id, nip, nuptk, full_name, gender, employment_status, teacher_type, phone, status, profiles(id, full_name, username, phone, email, is_active), teacher_classes(class_id, subject_id, academic_year, semester, classes(id, name), subjects(id, name))")
     .eq("profile_id", authData.user.id)
     .order("updated_at", { ascending: false })
     .limit(1);
@@ -68,8 +73,13 @@ export async function getCurrentTeacherProfile(): Promise<TeacherProfileData> {
     profileId: profile.id,
     fullName: teacherProfile?.full_name ?? profile.full_name ?? data?.full_name ?? "",
     username: teacherProfile?.username ?? profile.username ?? "",
-    email: authData.user.email ?? "",
+    email: teacherProfile?.email ?? authData.user.email ?? "",
     phone: teacherProfile?.phone ?? profile.phone ?? data?.phone ?? "",
+    nip: data?.nip ?? "",
+    nuptk: data?.nuptk ?? "",
+    gender: data?.gender === "P" ? "P" : data?.gender === "L" ? "L" : "",
+    employmentStatus: data?.employment_status ?? "",
+    teacherType: data?.teacher_type ?? "",
     subjectIds,
     subjectNames,
     classIds,

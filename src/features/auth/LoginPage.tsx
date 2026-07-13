@@ -17,7 +17,7 @@ const redirectByRole: Record<Role, string> = {
 
 export function LoginPage() {
   const { settings, refreshSettings } = useAppSettings();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +30,7 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const user = await login({ email, password });
+      const user = await login({ identifier, password });
       await refreshSettings();
       navigate(redirectByRole[user.role], { replace: true });
     } catch (err) {
@@ -85,7 +85,14 @@ export function LoginPage() {
 
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-[38px] h-4 w-4 text-slate-400" />
-                <Input label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@sinden.local" className="h-12 bg-white pl-10" required />
+                <Input
+                  label="Username / NISN / NIS / NIP / NUPTK / Gmail"
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
+                  placeholder="Masukkan username, NISN, NIS, NIP, NUPTK, atau Gmail"
+                  className="h-12 bg-white pl-10"
+                  required
+                />
               </div>
 
               <div>
@@ -96,7 +103,7 @@ export function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Masukkan password"
+                    placeholder="Masukkan password akun"
                     className="h-12 bg-white pl-10 pr-10"
                     required
                   />
@@ -117,6 +124,9 @@ export function LoginPage() {
                 {isSubmitting ? "Memproses..." : "Masuk"}
                 {!isSubmitting && <ArrowRight className="h-4 w-4" />}
               </Button>
+              <p className="text-center text-xs leading-5 text-slate-500">
+                Siswa dapat login menggunakan NISN/NIS. Guru dapat login menggunakan NIP/NUPTK. Admin dapat login menggunakan username atau Gmail.
+              </p>
             </form>
 
           </div>

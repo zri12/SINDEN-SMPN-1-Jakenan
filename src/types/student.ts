@@ -7,6 +7,10 @@ export interface Student {
   classId: string;
   className: string;
   gender: "L" | "P";
+  birthPlace?: string;
+  birthDate?: string;
+  address?: string;
   username: string;
-  status: "active" | "inactive";
+  email?: string;
+  status: "active" | "inactive" | "graduated";
 }

@@ -9,16 +9,22 @@ export function useAuth() {
 
   useEffect(() => {
     setUser(getCurrentUser());
-    getCurrentProfile().then((profile) => {
-      setUser(profile);
-      setIsLoading(false);
-    });
+    getCurrentProfile()
+      .then((profile) => setUser(profile))
+      .catch(() => {
+        void logoutService();
+        setUser(null);
+      })
+      .finally(() => setIsLoading(false));
 
     const subscription = supabase?.auth.onAuthStateChange((_event) => {
-      void getCurrentProfile().then((profile) => {
-        setUser(profile);
-        setIsLoading(false);
-      });
+      void getCurrentProfile()
+        .then((profile) => setUser(profile))
+        .catch(() => {
+          void logoutService();
+          setUser(null);
+        })
+        .finally(() => setIsLoading(false));
     }).data.subscription;
 
     return () => {

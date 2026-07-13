@@ -21,6 +21,15 @@ begin
     raise notice 'Profile siswa belum ada. Data siswa utama tetap dibuat dengan profile_id NULL.';
   end if;
 
+  update public.profiles
+  set email = coalesce(email, case role
+    when 'admin' then 'admin@sinden.local'
+    when 'teacher' then 'guru@sinden.local'
+    when 'student' then 'siswa@sinden.local'
+    else email
+  end)
+  where id in (admin_profile_id, teacher_profile_id, student_profile_id);
+
   delete from public.grades;
   delete from public.assignment_comments;
   delete from public.submissions;
