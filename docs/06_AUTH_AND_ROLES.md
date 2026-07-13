@@ -151,7 +151,6 @@ Siswa boleh mengakses:
 /siswa/nilai
 /siswa/tugas
 /siswa/upload-tugas
-/siswa/informasi
 ```
 
 Siswa boleh melakukan:
@@ -161,7 +160,6 @@ Siswa boleh melakukan:
 - melihat tugas untuk kelasnya;
 - upload/mengumpulkan tugas;
 - melihat status tugas;
-- melihat informasi.
 
 Siswa tidak boleh:
 

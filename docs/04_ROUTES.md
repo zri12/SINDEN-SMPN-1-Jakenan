@@ -67,7 +67,6 @@ Setiap role hanya boleh mengakses route miliknya sendiri.
 | `/siswa/nilai` | Nilai Saya | Melihat nilai sendiri |
 | `/siswa/tugas` | Tugas Saya | Melihat daftar tugas |
 | `/siswa/upload-tugas` | Upload Tugas | Mengumpulkan tugas |
-| `/siswa/informasi` | Informasi | Melihat informasi/pengumuman |
 
 ---
 
@@ -169,7 +168,6 @@ Dashboard       → /siswa/dashboard
 Nilai Saya      → /siswa/nilai
 Tugas Saya      → /siswa/tugas
 Upload Tugas    → /siswa/upload-tugas
-Informasi       → /siswa/informasi
 Logout          → logout action
 ```
 

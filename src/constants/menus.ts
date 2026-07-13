@@ -5,7 +5,6 @@ import {
   ClipboardCheck,
   ClipboardList,
   FileText,
-  Info,
   LayoutDashboard,
   UserCircle,
   School,
@@ -49,7 +48,6 @@ export const studentMenus: MenuItem[] = [
   { label: "Dashboard", path: ROUTES.student.dashboard, icon: LayoutDashboard },
   { label: "Nilai Saya", path: ROUTES.student.grades, icon: ClipboardList },
   { label: "Tugas Saya", path: ROUTES.student.assignments, icon: BookMarked },
-  { label: "Informasi", path: ROUTES.student.information, icon: Info },
   { label: "Profile", path: ROUTES.student.profile, icon: UserCircle }
 ];
 

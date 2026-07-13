@@ -26,7 +26,6 @@ export const ROUTES = {
     dashboard: "/siswa/dashboard",
     grades: "/siswa/nilai",
     assignments: "/siswa/tugas",
-    information: "/siswa/informasi",
     profile: "/siswa/profile"
   }
 } as const;

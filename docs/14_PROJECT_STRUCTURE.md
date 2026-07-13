@@ -307,8 +307,7 @@ student/
 │   ├── StudentDashboard.tsx
 │   ├── MyGrades.tsx
 │   ├── MyAssignments.tsx
-│   ├── UploadAssignment.tsx
-│   └── StudentInformation.tsx
+│   └── StudentProfile.tsx
 └── studentService.ts
 ```
 
