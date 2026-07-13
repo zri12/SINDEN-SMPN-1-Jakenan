@@ -228,11 +228,11 @@ export function MyAssignments() {
             <div className="max-w-xl flex-1">
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari judul, mapel, guru, atau kelas..." />
             </div>
-            <Button className="w-full md:w-24"><Search className="h-4 w-4" /></Button>
+            <Button className="min-h-11 w-full md:w-24"><Search className="h-4 w-4" /></Button>
           </div>
 
           <div className="border-b border-blue-300">
-            <div className="flex flex-wrap gap-1">
+            <div className="grid grid-cols-3 gap-0 sm:flex sm:flex-wrap sm:gap-1">
               <AssignmentTabButton label="Todo" count={grouped.todo.length} active={activeTab === "todo"} onClick={() => setActiveTab("todo")} />
               <AssignmentTabButton label="Missed" count={grouped.missed.length} active={activeTab === "missed"} onClick={() => setActiveTab("missed")} />
               <AssignmentTabButton label="Submitted" count={grouped.submitted.length} active={activeTab === "submitted"} onClick={() => setActiveTab("submitted")} />
@@ -265,7 +265,7 @@ function AssignmentTabButton({ label, count, active, onClick }: { label: string;
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-11 items-center gap-2 px-5 text-sm font-semibold transition ${active ? "rounded-t-lg bg-blue-600 text-white" : "text-blue-600 hover:bg-blue-50"}`}
+      className={`flex min-h-11 items-center justify-center gap-1.5 px-2 text-xs font-semibold transition sm:gap-2 sm:px-5 sm:text-sm ${active ? "rounded-t-lg bg-blue-600 text-white" : "text-blue-600 hover:bg-blue-50"}`}
     >
       {label}
       <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${active ? "bg-red-400 text-white" : "bg-red-500 text-white"}`}>{count}</span>
@@ -277,23 +277,23 @@ function AssignmentCard({ assignment, tab, submitted, onClick }: { assignment: A
   const tone = tab === "missed" ? "red" : submitted ? "blue" : "slate";
 
   return (
-    <button type="button" onClick={onClick} className="w-full rounded-lg bg-white p-5 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
+    <button type="button" onClick={onClick} className="w-full overflow-hidden rounded-lg bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0">
-          <h3 className="truncate text-lg font-bold text-blue-600">{assignment.title}</h3>
-          <p className="mt-4 text-sm font-medium uppercase tracking-wide text-slate-500">{assignment.subjectName || "Mata Pelajaran"} | {assignment.className}</p>
+          <h3 className="break-words text-base font-bold leading-snug text-blue-600 sm:text-lg">{assignment.title}</h3>
+          <p className="mt-3 break-words text-xs font-medium uppercase tracking-wide text-slate-500 sm:mt-4 sm:text-sm">{assignment.subjectName || "Mata Pelajaran"} | {assignment.className}</p>
           <p className="mt-1 text-sm text-slate-500">Reguler | {assignment.className}</p>
         </div>
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${tone === "red" ? "bg-red-100 text-red-500" : tone === "blue" ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-700"}`}>
+        <span className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:text-sm ${tone === "red" ? "bg-red-100 text-red-500" : tone === "blue" ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-700"}`}>
           <ClipboardList className="h-4 w-4" />Assignment
         </span>
       </div>
-      <div className="my-5 border-t border-slate-100" />
+      <div className="my-4 border-t border-slate-100 sm:my-5" />
       <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-700">
         <User className="h-4 w-4" />{assignment.teacherName || "-"}
       </div>
-      <div className="my-5 border-t border-slate-100" />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="my-4 border-t border-slate-100 sm:my-5" />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <div className="text-sm text-slate-700">
           <p className="font-semibold text-slate-800">Start Date</p>
           <p className="mt-1">{formatDate(assignment.publishAt ?? assignment.deadline)}</p>

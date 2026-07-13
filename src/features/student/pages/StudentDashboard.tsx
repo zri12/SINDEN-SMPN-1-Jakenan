@@ -1,4 +1,4 @@
-import { Bell, ClipboardList, FileText, TrendingUp } from "lucide-react";
+import { ClipboardList, FileText, Info, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
 import { Card } from "@/components/common/Card";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -31,7 +31,7 @@ export function StudentDashboard() {
         <StatCard title="Rata-rata Nilai" value={scores.length ? calculateAverage(scores).toFixed(1) : "0"} icon={TrendingUp} color="#2563eb" />
         <StatCard title="Mapel Tuntas" value={grades.filter((grade) => grade.score >= grade.kkm).length} icon={ClipboardList} color="#16a34a" />
         <StatCard title="Tugas Aktif" value={assignments.filter((assignment) => assignment.status === "active").length} icon={FileText} color="#d97706" />
-        <StatCard title="Informasi Baru" value={announcements.length} icon={Bell} color="#7c3aed" />
+        <StatCard title="Informasi Baru" value={announcements.length} icon={Info} color="#7c3aed" />
       </div>
       <Card className="mt-4">
         <h3 className="mb-4 font-semibold text-slate-900">Informasi Terbaru</h3>
