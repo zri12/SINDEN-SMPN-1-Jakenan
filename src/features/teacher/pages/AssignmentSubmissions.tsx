@@ -10,12 +10,12 @@ import { Modal } from "@/components/common/Modal";
 import { Select } from "@/components/common/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SubmissionTable } from "@/components/tables/SubmissionTable";
-import { useSubmissions } from "@/hooks/useSubmissions";
+import { useSubmissionStatuses } from "@/hooks/useSubmissionStatuses";
 import { createGrade } from "@/services/gradeService";
 import type { Submission } from "@/types/submission";
 
 export function AssignmentSubmissions() {
-  const { submissions, isLoading, error } = useSubmissions();
+  const { submissions, isLoading, error } = useSubmissionStatuses();
   const [selected, setSelected] = useState<Submission | null>(null);
   const [scores, setScores] = useState<Record<string, { score: string; type: string; note: string }>>({});
   const [saveError, setSaveError] = useState<string | null>(null);

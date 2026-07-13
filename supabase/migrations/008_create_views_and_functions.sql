@@ -89,18 +89,27 @@ as
 select
   a.id as assignment_id,
   a.title,
+  a.teacher_id,
+  a.class_id,
+  a.subject_id,
+  sub.name as subject_name,
+  sub.kkm,
   st.id as student_id,
   st.full_name as student_name,
   c.name as class_name,
   sbm.id as submission_id,
   coalesce(sbm.status, 'not_submitted') as submission_status,
   sbm.submitted_at,
+  sbm.submission_file_url,
+  sbm.submission_file_path,
+  sbm.submission_link_url,
   sbm.note,
   g.score,
   g.id as grade_id,
   case when sbm.id is null then 'Belum Mengumpulkan' else 'Sudah Mengumpulkan' end as status_pengumpulan
 from public.assignments a
 join public.classes c on c.id = a.class_id
+join public.subjects sub on sub.id = a.subject_id
 join public.students st on st.class_id = a.class_id and st.status = 'active'
 left join public.submissions sbm on sbm.assignment_id = a.id and sbm.student_id = st.id
 left join public.grades g on g.submission_id = sbm.id

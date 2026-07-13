@@ -6,12 +6,18 @@ export async function getAssignments() {
   const client = getSupabase();
   if (!client) return [];
 
-  const { data, error } = await client
-    .from("assignments")
-    .select("*, teachers(full_name), classes(name), subjects(name)")
-    .order("created_at", { ascending: false });
+  const [{ data, error }, { data: summaries, error: summaryError }] = await Promise.all([
+    client
+      .from("assignments")
+      .select("*, teachers(full_name), classes(name), subjects(name)")
+      .order("created_at", { ascending: false }),
+    client.from("assignment_submission_summary").select("assignment_id, submitted_count")
+  ]);
   if (error) handleSupabaseError(error, "Data tugas gagal dimuat.");
-  return Promise.all((data ?? []).map(mapAssignment));
+  if (summaryError) handleSupabaseError(summaryError, "Ringkasan pengumpulan tugas gagal dimuat.");
+
+  const submittedCountByAssignment = new Map((summaries ?? []).map((item: any) => [item.assignment_id, item.submitted_count ?? 0]));
+  return Promise.all((data ?? []).map((item: any) => mapAssignment({ ...item, submitted_count: submittedCountByAssignment.get(item.id) ?? item.submitted_count ?? 0 })));
 }
 
 export async function createAssignment(assignment: Assignment) {

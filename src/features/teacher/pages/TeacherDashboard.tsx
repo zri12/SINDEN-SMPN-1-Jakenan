@@ -7,17 +7,17 @@ import { AssignmentTable } from "@/components/tables/AssignmentTable";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useClasses } from "@/hooks/useClasses";
 import { useGrades } from "@/hooks/useGrades";
-import { useSubmissions } from "@/hooks/useSubmissions";
+import { useSubmissionStatuses } from "@/hooks/useSubmissionStatuses";
 import { calculateAverage } from "@/utils/calculateGrade";
 
 export function TeacherDashboard() {
   const { classes } = useClasses();
   const { assignments } = useAssignments();
-  const { submissions } = useSubmissions();
+  const { submissions } = useSubmissionStatuses();
   const { grades } = useGrades();
   const activeAssignments = assignments.filter((item) => item.status === "active");
   const submitted = submissions.filter((item) => item.status === "submitted" || item.status === "late").length;
-  const pending = Math.max(activeAssignments.length * classes.length - submitted, 0);
+  const pending = submissions.filter((item) => item.status === "not_submitted").length;
   const average = grades.length ? calculateAverage(grades.map((grade) => grade.score)).toFixed(1) : "0";
 
   return (

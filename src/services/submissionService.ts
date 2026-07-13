@@ -14,6 +14,19 @@ export async function getSubmissions() {
   return Promise.all((data ?? []).map(mapSubmission));
 }
 
+export async function getSubmissionStatuses() {
+  const client = getSupabase();
+  if (!client) return [];
+
+  const { data, error } = await client
+    .from("teacher_submission_status_view")
+    .select("*")
+    .order("title", { ascending: true })
+    .order("student_name", { ascending: true });
+  if (error) handleSupabaseError(error, "Data status pengumpulan gagal dimuat.");
+  return Promise.all((data ?? []).map(mapSubmissionStatus));
+}
+
 export async function createSubmission(submission: Submission) {
   const client = requireSupabase();
 
@@ -57,6 +70,38 @@ async function mapSubmission(row: any): Promise<Submission> {
     status: row.status === "late" ? "late" : "submitted",
     submittedAt: row.submitted_at ?? undefined
   };
+}
+
+async function mapSubmissionStatus(row: any): Promise<Submission> {
+  const filePath = row.submission_file_path ?? undefined;
+  const signedFileUrl = filePath ? await getSafeSignedUrl(filePath) : undefined;
+  const submissionId = row.submission_id ?? `${row.assignment_id}-${row.student_id}`;
+
+  return {
+    id: submissionId,
+    assignmentId: row.assignment_id,
+    assignmentTitle: row.title ?? "-",
+    teacherId: row.teacher_id ?? undefined,
+    classId: row.class_id ?? undefined,
+    subjectId: row.subject_id ?? undefined,
+    subjectName: row.subject_name ?? undefined,
+    kkm: row.kkm ?? undefined,
+    studentId: row.student_id,
+    studentName: row.student_name ?? "-",
+    className: row.class_name ?? "-",
+    fileUrl: signedFileUrl ?? row.submission_file_url ?? row.submission_link_url ?? undefined,
+    filePath,
+    linkUrl: row.submission_link_url ?? undefined,
+    note: row.note ?? undefined,
+    status: mapSubmissionStatusValue(row.submission_status),
+    submittedAt: row.submitted_at ?? undefined
+  };
+}
+
+function mapSubmissionStatusValue(status?: string): Submission["status"] {
+  if (status === "late") return "late";
+  if (status === "submitted" || status === "reviewed") return "submitted";
+  return "not_submitted";
 }
 
 function toSubmissionRow(submission: Partial<Submission>) {
