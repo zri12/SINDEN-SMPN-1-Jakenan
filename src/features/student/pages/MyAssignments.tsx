@@ -18,6 +18,11 @@ import type { Submission } from "@/types/submission";
 import { formatDate } from "@/utils/formatDate";
 
 type AssignmentTab = "todo" | "missed" | "submitted";
+type AssignmentComment = {
+  id: string;
+  text: string;
+  createdAt: string;
+};
 
 export function MyAssignments() {
   const { assignments: allAssignments, isLoading: assignmentsLoading, error: assignmentsError } = useAssignments();
@@ -28,6 +33,9 @@ export function MyAssignments() {
   const [activeTab, setActiveTab] = useState<AssignmentTab>("todo");
   const [search, setSearch] = useState("");
   const [submission, setSubmission] = useState<{ file: File | null; link: string; note: string }>({ file: null, link: "", note: "" });
+  const [commentsByAssignment, setCommentsByAssignment] = useState<Record<string, AssignmentComment[]>>({});
+  const [privateCommentsByAssignment, setPrivateCommentsByAssignment] = useState<Record<string, AssignmentComment[]>>({});
+  const [commentDraft, setCommentDraft] = useState("");
   const [privateComment, setPrivateComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -82,8 +90,41 @@ export function MyAssignments() {
     const existing = submissionsByAssignment.get(assignment.id);
     setSelected(assignment);
     setSubmitError("");
-    setPrivateComment(existing?.note ?? "");
-    setSubmission({ file: null, link: existing?.linkUrl ?? "", note: existing?.note ?? "" });
+    setCommentDraft("");
+    setPrivateComment("");
+    setSubmission({ file: null, link: existing?.linkUrl ?? "", note: "" });
+    if (existing?.note) {
+      setCommentsByAssignment((items) => {
+        if (items[assignment.id]?.some((comment) => comment.id === `submission-${existing.id}`)) return items;
+        return {
+          ...items,
+          [assignment.id]: [
+            ...(items[assignment.id] ?? []),
+            {
+              id: `submission-${existing.id}`,
+              text: existing.note ?? "",
+              createdAt: existing.submittedAt ?? new Date().toISOString()
+            }
+          ]
+        };
+      });
+    }
+  };
+
+  const sendComment = () => {
+    if (!selected) return;
+    const text = commentDraft.trim();
+    if (!text) return;
+    setCommentsByAssignment((items) => appendComment(items, selected.id, text));
+    setCommentDraft("");
+  };
+
+  const sendPrivateComment = () => {
+    if (!selected) return;
+    const text = privateComment.trim();
+    if (!text) return;
+    setPrivateCommentsByAssignment((items) => appendComment(items, selected.id, text));
+    setPrivateComment("");
   };
 
   const submitAssignment = async () => {
@@ -113,6 +154,9 @@ export function MyAssignments() {
         fileUrl = uploaded.publicUrl;
       }
 
+      const latestPublicComment = selected ? getLatestCommentText(commentsByAssignment[selected.id]) : "";
+      const latestPrivateComment = selected ? getLatestCommentText(privateCommentsByAssignment[selected.id]) : "";
+
       await createSubmission({
         id: submissionsByAssignment.get(selected.id)?.id ?? "",
         assignmentId: selected.id,
@@ -123,7 +167,7 @@ export function MyAssignments() {
         fileUrl,
         filePath,
         linkUrl: submission.link.trim() || undefined,
-        note: submission.note.trim() || privateComment.trim() || undefined,
+        note: latestPublicComment || latestPrivateComment || undefined,
         status: isLate(selected.deadline) ? "late" : "submitted",
         submittedAt: new Date().toISOString()
       });
@@ -147,13 +191,19 @@ export function MyAssignments() {
         assignment={selected}
         existingSubmission={submissionsByAssignment.get(selected.id)}
         submission={submission}
+        comments={commentsByAssignment[selected.id] ?? []}
+        privateComments={privateCommentsByAssignment[selected.id] ?? []}
+        commentDraft={commentDraft}
         privateComment={privateComment}
         submitError={submitError}
         isSubmitting={isSubmitting}
         isDeadlineClosed={isLate(selected.deadline)}
         onBack={() => setSelected(null)}
         onChangeSubmission={setSubmission}
+        onChangeCommentDraft={setCommentDraft}
         onChangePrivateComment={setPrivateComment}
+        onSendComment={sendComment}
+        onSendPrivateComment={sendPrivateComment}
         onSubmit={submitAssignment}
       />
     );
@@ -255,25 +305,37 @@ function AssignmentDetailPage({
   assignment,
   existingSubmission,
   submission,
+  comments,
+  privateComments,
+  commentDraft,
   privateComment,
   submitError,
   isSubmitting,
   isDeadlineClosed,
   onBack,
   onChangeSubmission,
+  onChangeCommentDraft,
   onChangePrivateComment,
+  onSendComment,
+  onSendPrivateComment,
   onSubmit
 }: {
   assignment: Assignment;
   existingSubmission?: Submission;
   submission: { file: File | null; link: string; note: string };
+  comments: AssignmentComment[];
+  privateComments: AssignmentComment[];
+  commentDraft: string;
   privateComment: string;
   submitError: string;
   isSubmitting: boolean;
   isDeadlineClosed: boolean;
   onBack: () => void;
   onChangeSubmission: (value: { file: File | null; link: string; note: string }) => void;
+  onChangeCommentDraft: (value: string) => void;
   onChangePrivateComment: (value: string) => void;
+  onSendComment: () => void;
+  onSendPrivateComment: () => void;
   onSubmit: () => void;
 }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -337,12 +399,14 @@ function AssignmentDetailPage({
               <h3 className="font-bold text-slate-800">Komentar</h3>
             </div>
             <div className="border-t border-slate-100 p-5">
-              <div className="flex gap-2">
-                <Input value={submission.note} onChange={(event) => onChangeSubmission({ ...submission, note: event.target.value })} placeholder="Add Comment here..." />
-                <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label="Kirim komentar">
-                  <Send className="h-4 w-4" />
-                </button>
-              </div>
+              <CommentBox
+                comments={comments}
+                draft={commentDraft}
+                placeholder="Tulis komentar..."
+                emptyText="Belum ada komentar."
+                onChangeDraft={onChangeCommentDraft}
+                onSend={onSendComment}
+              />
             </div>
           </Card>
         </div>
@@ -415,18 +479,92 @@ function AssignmentDetailPage({
               <h3 className="font-bold text-slate-800">Komentar Pribadi</h3>
             </div>
             <div className="border-t border-slate-100 p-5">
-              <div className="flex gap-2">
-                <Input value={privateComment} onChange={(event) => onChangePrivateComment(event.target.value)} placeholder="Add Comment here..." />
-                <button type="button" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label="Kirim komentar pribadi">
-                  <Send className="h-4 w-4" />
-                </button>
-              </div>
+              <CommentBox
+                comments={privateComments}
+                draft={privateComment}
+                placeholder="Tulis komentar pribadi..."
+                emptyText="Belum ada komentar pribadi."
+                compact
+                onChangeDraft={onChangePrivateComment}
+                onSend={onSendPrivateComment}
+              />
             </div>
           </Card>
         </div>
       </div>
     </div>
   );
+}
+
+function CommentBox({
+  comments,
+  draft,
+  placeholder,
+  emptyText,
+  compact,
+  onChangeDraft,
+  onSend
+}: {
+  comments: AssignmentComment[];
+  draft: string;
+  placeholder: string;
+  emptyText: string;
+  compact?: boolean;
+  onChangeDraft: (value: string) => void;
+  onSend: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className={`space-y-3 ${compact ? "max-h-48" : "max-h-64"} overflow-y-auto pr-1`}>
+        {comments.length === 0 ? (
+          <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">{emptyText}</p>
+        ) : (
+          comments.map((comment) => (
+            <div key={comment.id} className="rounded-2xl bg-blue-50 px-4 py-3 text-sm text-slate-700">
+              <p className="whitespace-pre-wrap leading-6">{comment.text}</p>
+              <p className="mt-2 text-xs font-medium text-blue-600">{formatDate(comment.createdAt)} pukul {formatTime(comment.createdAt)}</p>
+            </div>
+          ))
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Input value={draft} onChange={(event) => onChangeDraft(event.target.value)} placeholder={placeholder} onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onSend();
+          }
+        }} />
+        <button
+          type="button"
+          onClick={onSend}
+          disabled={!draft.trim()}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Kirim komentar"
+        >
+          <Send className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function appendComment(items: Record<string, AssignmentComment[]>, assignmentId: string, text: string) {
+  return {
+    ...items,
+    [assignmentId]: [
+      ...(items[assignmentId] ?? []),
+      {
+        id: crypto.randomUUID(),
+        text,
+        createdAt: new Date().toISOString()
+      }
+    ]
+  };
+}
+
+function getLatestCommentText(comments?: AssignmentComment[]) {
+  if (!comments?.length) return "";
+  return comments[comments.length - 1]?.text ?? "";
 }
 
 function DetailItem({ icon: Icon, label, value, helper }: { icon: typeof CalendarCheck; label: string; value: string; helper: string }) {
