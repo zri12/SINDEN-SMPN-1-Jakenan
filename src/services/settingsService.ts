@@ -17,7 +17,12 @@ export async function getSettings() {
   const client = getSupabase();
   if (!client) return fallbackSettings;
 
-  const { data, error } = await client.from("settings").select("*").limit(1).maybeSingle();
+  const { data, error } = await client
+    .from("settings")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   if (error) handleSupabaseError(error, "Pengaturan gagal dimuat.");
   if (!data) return fallbackSettings;
   return mapSettings(data);
@@ -34,7 +39,7 @@ export async function updateSettings(settings: Partial<AppSettings>) {
     academic_year: settings.academicYear,
     semester: settings.semester,
     default_kkm: settings.defaultKkm,
-    logo_url: settings.logoUrl
+    logo_url: Object.prototype.hasOwnProperty.call(settings, "logoUrl") ? settings.logoUrl ?? null : undefined
   });
 
   const query = settings.id && settings.id !== "local-settings"
