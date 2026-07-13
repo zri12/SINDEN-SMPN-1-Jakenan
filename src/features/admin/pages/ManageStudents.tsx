@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { StudentTable } from "@/components/tables/StudentTable";
 import { useClasses } from "@/hooks/useClasses";
 import { useStudents } from "@/hooks/useStudents";
-import { resetUserPassword } from "@/services/adminService";
+import { createUserAccount, resetUserPassword } from "@/services/adminService";
 import { createStudent, deleteStudent as removeStudent, updateStudent } from "@/services/studentService";
 import type { ClassRoom } from "@/types/class";
 import type { Student } from "@/types/student";
@@ -32,6 +32,7 @@ export function ManageStudents() {
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
   const [passwordForm, setPasswordForm] = useState({ password: "", confirm: "" });
+  const [createAccountForm, setCreateAccountForm] = useState({ username: "", email: "", password: "", confirm: "" });
   const [isSaving, setIsSaving] = useState(false);
 
   const filtered = useMemo(
@@ -44,6 +45,7 @@ export function ManageStudents() {
     setSelected(null);
     setActionError("");
     setActionSuccess("");
+    setCreateAccountForm({ username: "", email: "", password: "", confirm: "" });
     setModalMode("create");
   };
 
@@ -62,7 +64,19 @@ export function ManageStudents() {
       if (modalMode === "edit" && selected) {
         await updateStudent(selected.id, form);
       } else {
-        await createStudent(form);
+        if (students.some((student) => student.nisn && student.nisn === form.nisn)) throw new Error("NISN sudah digunakan.");
+        if (form.nis && students.some((student) => student.nis === form.nis)) throw new Error("NIS / NIPD sudah digunakan.");
+        if (createAccountForm.password.length < 8) throw new Error("Password minimal 8 karakter");
+        if (createAccountForm.password !== createAccountForm.confirm) throw new Error("Konfirmasi password harus sama.");
+        const account = await createUserAccount({
+          role: "student",
+          fullName: form.fullName,
+          username: createAccountForm.username || form.nisn || form.nis,
+          email: createAccountForm.email,
+          fallbackIdentifier: form.nisn || form.nis,
+          password: createAccountForm.password
+        });
+        await createStudent({ ...form, profileId: account.profileId, username: account.username, email: account.email });
       }
       await refetch();
       setModalMode(null);
@@ -153,7 +167,18 @@ export function ManageStudents() {
       </Card>
       {(modalMode === "create" || modalMode === "edit") && (
         <Modal title={modalMode === "create" ? "Tambah Data Siswa" : "Edit Data Siswa"} onClose={() => setModalMode(null)}>
-          <StudentEditor classes={classes} form={form} setForm={setForm} error={actionError} isSaving={isSaving} onCancel={() => setModalMode(null)} onSave={saveStudent} />
+          <StudentEditor
+            mode={modalMode}
+            classes={classes}
+            form={form}
+            setForm={setForm}
+            accountForm={createAccountForm}
+            setAccountForm={setCreateAccountForm}
+            error={actionError}
+            isSaving={isSaving}
+            onCancel={() => setModalMode(null)}
+            onSave={saveStudent}
+          />
         </Modal>
       )}
       {modalMode === "view" && selected && (
@@ -202,12 +227,46 @@ function emptyStudent(classRoom?: ClassRoom): Student {
   return { id: "", nis: "", nisn: "", fullName: "", classId: classRoom?.id ?? "", className: classRoom?.name ?? "", gender: "L", birthPlace: "", birthDate: "", address: "", username: "", email: "", status: "active" };
 }
 
-function StudentEditor({ classes, form, setForm, error, isSaving, onCancel, onSave }: { classes: ClassRoom[]; form: Student; setForm: (student: Student) => void; error: string; isSaving: boolean; onCancel: () => void; onSave: () => void }) {
+function StudentEditor({
+  mode,
+  classes,
+  form,
+  setForm,
+  accountForm,
+  setAccountForm,
+  error,
+  isSaving,
+  onCancel,
+  onSave
+}: {
+  mode: "create" | "edit";
+  classes: ClassRoom[];
+  form: Student;
+  setForm: (student: Student) => void;
+  accountForm: { username: string; email: string; password: string; confirm: string };
+  setAccountForm: (value: { username: string; email: string; password: string; confirm: string }) => void;
+  error: string;
+  isSaving: boolean;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
   const classOptions = classes.map((item) => ({ value: item.id, label: item.name }));
 
   return (
     <div className="space-y-4">
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {mode === "create" && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <h3 className="font-semibold text-blue-950">Akun Login Siswa</h3>
+          <p className="mt-1 text-sm text-blue-800">Admin membuat akun login siswa bersamaan dengan data siswa.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Input label="Username Akun" value={accountForm.username} onChange={(event) => setAccountForm({ ...accountForm, username: event.target.value })} placeholder="Opsional, default NISN/NIS" />
+            <Input label="Email / Gmail" type="email" value={accountForm.email} onChange={(event) => setAccountForm({ ...accountForm, email: event.target.value })} placeholder="Opsional, otomatis jika kosong" />
+            <Input label="Password" type="password" value={accountForm.password} onChange={(event) => setAccountForm({ ...accountForm, password: event.target.value })} />
+            <Input label="Konfirmasi Password" type="password" value={accountForm.confirm} onChange={(event) => setAccountForm({ ...accountForm, confirm: event.target.value })} />
+          </div>
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="NISN" value={form.nisn} onChange={(event) => setForm({ ...form, nisn: event.target.value })} required />
         <Input label="NIS / NIPD" value={form.nis} onChange={(event) => setForm({ ...form, nis: event.target.value })} />

@@ -61,6 +61,7 @@ function mapTeacher(row: any): Teacher {
 
 function toTeacherRow(teacher: Partial<Teacher>) {
   return omitUndefined({
+    profile_id: teacher.profileId,
     nip: teacher.nip,
     nuptk: teacher.nuptk,
     full_name: teacher.fullName,

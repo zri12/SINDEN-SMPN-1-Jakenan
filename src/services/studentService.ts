@@ -97,6 +97,7 @@ function mapStudent(row: any): Student {
 
 function toStudentRow(student: Partial<Student>) {
   return omitUndefined({
+    profile_id: student.profileId,
     nis: student.nis,
     nisn: student.nisn,
     full_name: student.fullName,

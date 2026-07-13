@@ -14,7 +14,7 @@ import { TeacherTable } from "@/components/tables/TeacherTable";
 import { useClasses } from "@/hooks/useClasses";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useTeachers } from "@/hooks/useTeachers";
-import { resetUserPassword } from "@/services/adminService";
+import { createUserAccount, resetUserPassword } from "@/services/adminService";
 import { createTeacher, deleteTeacher as removeTeacher, updateTeacher } from "@/services/teacherService";
 import type { ClassRoom } from "@/types/class";
 import type { Subject } from "@/types/subject";
@@ -33,6 +33,7 @@ export function ManageTeachers() {
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
   const [passwordForm, setPasswordForm] = useState({ password: "", confirm: "" });
+  const [createAccountForm, setCreateAccountForm] = useState({ username: "", email: "", password: "", confirm: "" });
   const [isSaving, setIsSaving] = useState(false);
 
   const filtered = useMemo(
@@ -45,6 +46,7 @@ export function ManageTeachers() {
     setForm(emptyTeacher(classes[0], subjects[0]));
     setActionError("");
     setActionSuccess("");
+    setCreateAccountForm({ username: "", email: "", password: "", confirm: "" });
     setModalMode("create");
   };
 
@@ -63,7 +65,20 @@ export function ManageTeachers() {
       if (modalMode === "edit" && selected) {
         await updateTeacher(selected.id, form);
       } else {
-        await createTeacher(form);
+        if (form.nip && teachers.some((teacher) => teacher.nip === form.nip)) throw new Error("NIP sudah digunakan.");
+        if (form.nuptk && teachers.some((teacher) => teacher.nuptk === form.nuptk)) throw new Error("NUPTK sudah digunakan.");
+        if (createAccountForm.password.length < 8) throw new Error("Password minimal 8 karakter");
+        if (createAccountForm.password !== createAccountForm.confirm) throw new Error("Konfirmasi password harus sama.");
+        const account = await createUserAccount({
+          role: "teacher",
+          fullName: form.fullName,
+          username: createAccountForm.username || form.nip || form.nuptk || "",
+          email: createAccountForm.email,
+          fallbackIdentifier: form.nip || form.nuptk || "",
+          password: createAccountForm.password,
+          phone: form.phone
+        });
+        await createTeacher({ ...form, profileId: account.profileId, username: account.username, email: account.email });
       }
       await refetch();
       setModalMode(null);
@@ -150,7 +165,19 @@ export function ManageTeachers() {
       </Card>
       {(modalMode === "create" || modalMode === "edit") && (
         <Modal title={modalMode === "create" ? "Tambah Data Guru" : "Edit Data Guru"} onClose={() => setModalMode(null)}>
-          <TeacherEditor classes={classes} subjects={subjects} form={form} setForm={setForm} error={actionError} isSaving={isSaving} onCancel={() => setModalMode(null)} onSave={saveTeacher} />
+          <TeacherEditor
+            mode={modalMode}
+            classes={classes}
+            subjects={subjects}
+            form={form}
+            setForm={setForm}
+            accountForm={createAccountForm}
+            setAccountForm={setCreateAccountForm}
+            error={actionError}
+            isSaving={isSaving}
+            onCancel={() => setModalMode(null)}
+            onSave={saveTeacher}
+          />
         </Modal>
       )}
       {modalMode === "view" && selected && (
@@ -201,7 +228,31 @@ function emptyTeacher(classRoom?: ClassRoom, subject?: Subject): Teacher {
   return { id: "", nip: "", nuptk: "", fullName: "", gender: "L", employmentStatus: "", teacherType: "", phone: "", email: "", subjectName: subject?.name ?? "", classNames: classRoom?.name ? [classRoom.name] : [], username: "", status: "active" };
 }
 
-function TeacherEditor({ classes, subjects, form, setForm, error, isSaving, onCancel, onSave }: { classes: ClassRoom[]; subjects: Subject[]; form: Teacher; setForm: (teacher: Teacher) => void; error: string; isSaving: boolean; onCancel: () => void; onSave: () => void }) {
+function TeacherEditor({
+  mode,
+  classes,
+  subjects,
+  form,
+  setForm,
+  accountForm,
+  setAccountForm,
+  error,
+  isSaving,
+  onCancel,
+  onSave
+}: {
+  mode: "create" | "edit";
+  classes: ClassRoom[];
+  subjects: Subject[];
+  form: Teacher;
+  setForm: (teacher: Teacher) => void;
+  accountForm: { username: string; email: string; password: string; confirm: string };
+  setAccountForm: (value: { username: string; email: string; password: string; confirm: string }) => void;
+  error: string;
+  isSaving: boolean;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
   const selectedSubjects = splitNames(form.subjectName);
 
   const toggleSubject = (name: string) => {
@@ -217,6 +268,18 @@ function TeacherEditor({ classes, subjects, form, setForm, error, isSaving, onCa
   return (
     <div className="space-y-4">
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {mode === "create" && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <h3 className="font-semibold text-blue-950">Akun Login Guru</h3>
+          <p className="mt-1 text-sm text-blue-800">Admin membuat akun login guru bersamaan dengan data guru.</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Input label="Username Akun" value={accountForm.username} onChange={(event) => setAccountForm({ ...accountForm, username: event.target.value })} placeholder="Opsional, default NIP/NUPTK" />
+            <Input label="Email / Gmail" type="email" value={accountForm.email} onChange={(event) => setAccountForm({ ...accountForm, email: event.target.value })} placeholder="Opsional, otomatis jika kosong" />
+            <Input label="Password" type="password" value={accountForm.password} onChange={(event) => setAccountForm({ ...accountForm, password: event.target.value })} />
+            <Input label="Konfirmasi Password" type="password" value={accountForm.confirm} onChange={(event) => setAccountForm({ ...accountForm, confirm: event.target.value })} />
+          </div>
+        </div>
+      )}
       <Input label="Nama Guru" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="NIP" value={form.nip ?? ""} onChange={(event) => setForm({ ...form, nip: event.target.value })} />
