@@ -1,4 +1,13 @@
--- SINDEN 007 - storage policies
+-- SINDEN 007 - private storage policies
+
+drop policy if exists "assignment_files_read" on storage.objects;
+drop policy if exists "assignment_files_teacher_insert" on storage.objects;
+drop policy if exists "assignment_files_teacher_update" on storage.objects;
+drop policy if exists "assignment_files_teacher_delete" on storage.objects;
+drop policy if exists "submission_files_read" on storage.objects;
+drop policy if exists "submission_files_student_insert" on storage.objects;
+drop policy if exists "submission_files_student_update" on storage.objects;
+drop policy if exists "submission_files_student_delete" on storage.objects;
 
 create policy "assignment_files_read" on storage.objects
 for select using (
@@ -9,9 +18,10 @@ for select using (
     or exists (
       select 1
       from public.assignments a
-      join public.students s on s.class_id = a.class_id
       where a.assignment_file_path = name
-        and s.id = public.get_current_student_id()
+        and a.class_id = public.current_student_class_id()
+        and a.status = 'active'
+        and (a.publish_at is null or a.publish_at <= now())
     )
   )
 );

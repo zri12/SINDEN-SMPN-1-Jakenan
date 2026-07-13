@@ -1,4 +1,4 @@
-const allowedExtensions = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".txt", ".csv", ".zip", ".rar"];
+const allowedExtensions = [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png", ".txt", ".zip", ".rar", ".7z", ".7zip"];
 const maxSizeMb = 10;
 
 export function validateFile(file: File) {

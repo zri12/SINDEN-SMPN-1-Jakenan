@@ -21,6 +21,8 @@ export interface Grade {
   className: string;
   subjectId: string;
   subjectName: string;
+  assignmentId?: string;
+  submissionId?: string;
   semester: string;
   gradeType: GradeType;
   score: number;

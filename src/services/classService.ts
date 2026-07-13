@@ -5,7 +5,7 @@ export async function getClasses() {
   const client = getSupabase();
   if (!client) return [];
 
-  const { data, error } = await client.from("classes").select("*").order("grade_level").order("name");
+  const { data, error } = await client.from("classes_with_student_count").select("*").order("grade_level").order("class_name");
   if (error) handleSupabaseError(error, "Data kelas gagal dimuat.");
   return (data ?? []).map(mapClass);
 }
@@ -48,8 +48,8 @@ export async function deleteClass(id: string) {
 
 function mapClass(row: any): ClassRoom {
   return {
-    id: row.id,
-    name: row.name,
+    id: row.id ?? row.class_id,
+    name: row.name ?? row.class_name,
     gradeLevel: row.grade_level,
     academicYear: row.academic_year,
     studentCount: row.student_count ?? 0

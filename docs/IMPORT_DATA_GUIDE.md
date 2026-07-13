@@ -1,65 +1,68 @@
-# Panduan Import Data Asli SINDEN
+# Import Data Guide
 
-Gunakan CSV saat import ke Supabase. Jangan memasukkan data asli siswa/guru ke source code.
+Gunakan format CSV sederhana dan pastikan kolom identifier disimpan sebagai text.
 
-## Siswa
+## CSV Siswa
 
-Kolom disarankan:
+Kolom:
 
-```csv
-full_name,nis,nisn,class_name,gender,birth_place,birth_date,address,status
-```
+`nis,nisn,full_name,gender,class_name,birth_place,birth_date,address,status`
 
 Catatan:
-- `nis` dan `nisn` harus bertipe text.
+
+- `nis` dan `nisn` wajib text.
 - `gender` isi `L` atau `P`.
+- `class_name` harus sudah ada di tabel `classes`.
 - `status` isi `active`, `inactive`, atau `graduated`.
-- Cocokkan `class_name` ke tabel `classes`, lalu isi `class_id`.
 
-## Guru
+## CSV Guru
 
-Kolom disarankan:
+Kolom:
 
-```csv
-full_name,nip,nuptk,gender,employment_status,teacher_type,phone,status
-```
+`nip,nuptk,full_name,gender,employment_status,teacher_type,phone,status`
 
 Catatan:
-- `nip` dan `nuptk` harus bertipe text.
-- Relasi guru-mapel-kelas dimasukkan ke `teacher_classes`.
 
-## Kelas
+- `nip` dan `nuptk` wajib text.
+- `status` isi `active` atau `inactive`.
+- Akun login guru dibuat di Supabase Auth, bukan dari CSV.
 
-Kolom:
-
-```csv
-name,grade_level,academic_year,description,is_active
-```
-
-Contoh kelas: `7A` sampai `9I`.
-
-## Mata Pelajaran
+## CSV Kelas
 
 Kolom:
 
-```csv
-code,name,kkm,description,is_active
-```
+`name,grade_level,academic_year,description,is_active`
 
-## Relasi Guru Kelas Mapel
+Contoh:
+
+`7A,7,2025/2026,Kelas 7A,true`
+
+## CSV Mata Pelajaran
 
 Kolom:
 
-```csv
-teacher_id,class_id,subject_id,academic_year,semester
-```
+`code,name,kkm,description,is_active`
 
-`semester` harus `ganjil` atau `genap`.
+Contoh:
 
-## Cara Import
+`MTK,Matematika,75,Mata pelajaran Matematika,true`
 
-1. Buka Supabase Table Editor.
-2. Pilih tabel tujuan.
-3. Klik Import Data from CSV.
-4. Pastikan tipe kolom text tidak berubah menjadi numeric.
-5. Import bertahap: `classes`, `subjects`, `teachers`, `students`, lalu `teacher_classes`.
+## CSV Pembagian Guru Mengajar
+
+Kolom:
+
+`teacher_nip,class_name,subject_code,academic_year,semester`
+
+Catatan:
+
+- `semester` isi `ganjil` atau `genap`.
+- Pastikan guru, kelas, dan mapel sudah diimport sebelum relasi mengajar.
+
+## Cara Import Ke Supabase
+
+1. Import kelas.
+2. Import mata pelajaran.
+3. Import guru.
+4. Import siswa.
+5. Import relasi guru mengajar.
+6. Cek foreign key sebelum membuat tugas/nilai.

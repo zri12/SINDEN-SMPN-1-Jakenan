@@ -1,4 +1,4 @@
--- SINDEN 006 - storage buckets
+-- SINDEN 006 - private storage buckets
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
   (
@@ -14,10 +14,13 @@ values
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
       'image/jpeg',
       'image/png',
       'application/zip',
-      'application/x-rar-compressed'
+      'application/x-rar-compressed',
+      'application/vnd.rar',
+      'application/x-7z-compressed'
     ]
   ),
   (
@@ -33,10 +36,13 @@ values
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
       'image/jpeg',
       'image/png',
       'application/zip',
-      'application/x-rar-compressed'
+      'application/x-rar-compressed',
+      'application/vnd.rar',
+      'application/x-7z-compressed'
     ]
   )
 on conflict (id) do update

@@ -1,6 +1,6 @@
 import type { Assignment } from "@/types/assignment";
 import { createSignedUrl } from "@/lib/storage";
-import { getSupabase, handleSupabaseError } from "./serviceUtils";
+import { getSupabase, handleSupabaseError, omitUndefined } from "./serviceUtils";
 
 export async function getAssignments() {
   const client = getSupabase();
@@ -74,7 +74,7 @@ async function getSafeAssignmentFileUrl(path: string) {
 }
 
 function toAssignmentRow(assignment: Partial<Assignment>) {
-  return {
+  return omitUndefined({
     teacher_id: assignment.teacherId,
     class_id: assignment.classId,
     subject_id: assignment.subjectId,
@@ -86,5 +86,5 @@ function toAssignmentRow(assignment: Partial<Assignment>) {
     publish_at: assignment.publishAt,
     deadline: assignment.deadline,
     status: assignment.status === "late" ? "active" : assignment.status
-  };
+  });
 }

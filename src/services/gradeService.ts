@@ -17,8 +17,15 @@ export async function createGrade(grade: Grade) {
   const client = getSupabase();
   if (!client) return grade;
 
-  const { data, error } = await client.from("grades").insert(toGradeRow(grade)).select("*, students(full_name), teachers(full_name), classes(name), subjects(name)").single();
+  const query = grade.submissionId
+    ? client.from("grades").upsert(toGradeRow(grade), { onConflict: "submission_id" })
+    : client.from("grades").insert(toGradeRow(grade));
+
+  const { data, error } = await query.select("*, students(full_name), teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Nilai gagal disimpan.");
+  if (grade.submissionId) {
+    await markSubmissionReviewed(grade.submissionId);
+  }
   return mapGrade(data);
 }
 
@@ -51,6 +58,8 @@ function mapGrade(row: any): Grade {
     className: row.classes?.name ?? "-",
     subjectId: row.subject_id ?? "",
     subjectName: row.subjects?.name ?? "-",
+    assignmentId: row.assignment_id ?? undefined,
+    submissionId: row.submission_id ?? undefined,
     semester: mapSemesterFromDb(row.semester),
     gradeType: mapGradeTypeFromDb(row.grade_type),
     score: Number(row.score),
@@ -65,6 +74,8 @@ function toGradeRow(grade: Partial<Grade>) {
     teacher_id: grade.teacherId,
     class_id: grade.classId,
     subject_id: grade.subjectId,
+    assignment_id: grade.assignmentId,
+    submission_id: grade.submissionId,
     grade_type: grade.gradeType ? mapGradeTypeToDb(grade.gradeType) : undefined,
     score: grade.score,
     kkm: grade.kkm,
@@ -72,6 +83,17 @@ function toGradeRow(grade: Partial<Grade>) {
     academic_year: "2025/2026",
     note: grade.note
   });
+}
+
+async function markSubmissionReviewed(submissionId: string) {
+  const client = getSupabase();
+  if (!client) return;
+
+  const { error } = await client
+    .from("submissions")
+    .update({ status: "reviewed", updated_at: new Date().toISOString() })
+    .eq("id", submissionId);
+  if (error) handleSupabaseError(error, "Status pengumpulan gagal diperbarui.");
 }
 
 function mapGradeTypeToDb(type: Grade["gradeType"]) {

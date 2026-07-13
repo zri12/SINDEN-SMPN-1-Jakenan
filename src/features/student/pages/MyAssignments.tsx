@@ -135,7 +135,7 @@ export function MyAssignments() {
       setActiveTab("submitted");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Pengumpulan tugas gagal dikirim.";
-      setSubmitError(message.includes("row-level security") ? "Akses submit ditolak Supabase. Jalankan supabase/fix_submission_rls.sql, lalu coba lagi." : message);
+      setSubmitError(message.includes("row-level security") ? "Akses submit ditolak Supabase. Jalankan ulang migration final 004 sampai 009 sesuai README SQL." : message);
     } finally {
       setIsSubmitting(false);
     }
@@ -401,7 +401,7 @@ function AssignmentDetailPage({
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Ekstensi file yang diizinkan: .jpg, .jpeg, .png, .pdf, .docx, .doc, .ppt, .pptx, .xls, .xlsx, .txt, .zip, .rar, .7zip
             </p>
-            <p className="text-sm text-slate-500">Ukuran file yang diizinkan: 4 MB</p>
+            <p className="text-sm text-slate-500">Ukuran file yang diizinkan: 10 MB</p>
             {showLinkInput && (
               <Input className="mt-4" value={submission.link} disabled={isDeadlineClosed} onChange={(event) => onChangeSubmission({ ...submission, link: event.target.value })} placeholder="Link jawaban" />
             )}

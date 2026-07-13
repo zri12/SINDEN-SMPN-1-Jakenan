@@ -1,46 +1,47 @@
-# Membuat Demo User Supabase Auth
+# Create And Link Demo Users
 
-Migration SQL tidak membuat password user secara langsung karena Supabase Auth dikelola oleh `auth.users`.
+Akun login dibuat dari Supabase Dashboard, bukan dari seed SQL.
 
-## 1. Buat User Di Dashboard
+## Buat Akun Auth
 
-Buka Supabase Dashboard:
+Di Supabase Dashboard buka `Authentication` -> `Users` -> `Add user`, lalu buat minimal:
 
-`Authentication -> Users -> Add user`
+- `admin@sinden.local`
+- `guru@sinden.local`
+- `siswa@sinden.local`
 
-Buat akun berikut:
+Simpan UID masing-masing user.
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | admin@sinden.local | Admin12345 |
-| Guru | guru@sinden.local | Guru12345 |
-| Siswa | siswa@sinden.local | Siswa12345 |
+## Buat Profiles
 
-Centang opsi email confirmed jika tersedia.
-
-## 2. Hubungkan Ke Profiles
-
-Setelah user dibuat, copy `id` setiap user dari tabel Auth Users. Jalankan SQL ini dengan mengganti UUID:
+Jalankan SQL ini setelah akun Auth dibuat. Ganti UID sesuai UID asli dari Supabase Auth.
 
 ```sql
-insert into public.profiles (id, full_name, role, username, phone)
+insert into public.profiles (id, full_name, username, role, is_active)
 values
-  ('UUID_ADMIN_AUTH_USER', 'Administrator', 'admin', 'admin', '08xx-xxxx-0000'),
-  ('UUID_GURU_AUTH_USER', 'Bapak Fauzan', 'teacher', 'guru', '08xx-xxxx-0001'),
-  ('UUID_SISWA_AUTH_USER', 'Ahmad Fauzan', 'student', 'siswa', '08xx-xxxx-0002')
+  ('UID_ADMIN', 'Administrator', 'admin', 'admin', true),
+  ('UID_GURU', 'Guru Demo Matematika', 'guru', 'teacher', true),
+  ('UID_SISWA', 'Ahmad Fauzan', 'siswa', 'student', true)
 on conflict (id) do update
 set full_name = excluded.full_name,
-    role = excluded.role,
     username = excluded.username,
-    phone = excluded.phone;
-
-update public.teachers
-set profile_id = 'UUID_GURU_AUTH_USER'
-where full_name = 'Bapak Fauzan';
-
-update public.students
-set profile_id = 'UUID_SISWA_AUTH_USER'
-where nisn = '0051234001';
+    role = excluded.role,
+    is_active = excluded.is_active,
+    updated_at = now();
 ```
 
-Admin tidak membutuhkan baris di tabel `teachers` atau `students`.
+## Link Ke Teachers Dan Students
+
+Setelah profiles ada, jalankan:
+
+```sql
+update public.teachers
+set profile_id = (select id from public.profiles where role = 'teacher' and is_active = true limit 1)
+where id = '00000000-0000-0000-0000-000000002001';
+
+update public.students
+set profile_id = (select id from public.profiles where role = 'student' and is_active = true limit 1)
+where id = '00000000-0000-0000-0000-000000003001';
+```
+
+File `009_reset_and_seed_demo_data.sql` juga melakukan link otomatis jika profiles sudah tersedia sebelum seed dijalankan.

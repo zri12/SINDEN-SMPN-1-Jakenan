@@ -1,2 +1,0 @@
--- TODO: enable RLS and add policies.
--- Admin: all students. Teacher: taught classes. Student: own record.

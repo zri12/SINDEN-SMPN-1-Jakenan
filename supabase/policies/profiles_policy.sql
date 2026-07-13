@@ -1,2 +1,0 @@
--- TODO: enable RLS and add policies.
--- Admin: all profiles. Teacher/student: own profile only.

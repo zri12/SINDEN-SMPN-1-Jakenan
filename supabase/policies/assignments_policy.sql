@@ -1,2 +1,0 @@
--- TODO: enable RLS and add policies.
--- Bucket note: assignment-files stores files uploaded by teachers.

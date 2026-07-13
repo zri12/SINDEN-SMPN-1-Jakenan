@@ -85,6 +85,7 @@ create table if not exists public.assignments (
   assignment_file_url text,
   assignment_file_path text,
   assignment_link_url text,
+  publish_at timestamptz,
   deadline timestamptz,
   status text not null default 'active' check (status in ('active', 'closed', 'archived')),
   created_at timestamptz not null default now(),
@@ -123,6 +124,31 @@ create table if not exists public.grades (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.assignments add column if not exists publish_at timestamptz;
+alter table public.grades add column if not exists assignment_id uuid references public.assignments(id) on delete set null;
+alter table public.grades add column if not exists submission_id uuid references public.submissions(id) on delete set null;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'grades_submission_id_unique'
+      and conrelid = 'public.grades'::regclass
+  ) and not exists (
+    select 1
+    from public.grades
+    where submission_id is not null
+    group by submission_id
+    having count(*) > 1
+  ) then
+    alter table public.grades add constraint grades_submission_id_unique unique (submission_id);
+  else
+    raise notice 'Constraint grades_submission_id_unique sudah ada atau ditunda karena ada data duplikat lama. Jalankan 009 untuk reset demo.';
+  end if;
+end;
+$$;
 
 create table if not exists public.announcements (
   id uuid primary key default gen_random_uuid(),
@@ -165,8 +191,12 @@ create index if not exists idx_teacher_classes_teacher_id on public.teacher_clas
 create index if not exists idx_teacher_classes_class_subject on public.teacher_classes(class_id, subject_id);
 create index if not exists idx_assignments_teacher_id on public.assignments(teacher_id);
 create index if not exists idx_assignments_class_subject on public.assignments(class_id, subject_id);
+create index if not exists idx_assignments_publish_status on public.assignments(status, publish_at, deadline);
 create index if not exists idx_submissions_assignment_id on public.submissions(assignment_id);
 create index if not exists idx_submissions_student_id on public.submissions(student_id);
+create index if not exists idx_submissions_assignment_student on public.submissions(assignment_id, student_id);
 create index if not exists idx_grades_student_id on public.grades(student_id);
 create index if not exists idx_grades_teacher_subject on public.grades(teacher_id, subject_id);
+create index if not exists idx_grades_assignment_id on public.grades(assignment_id);
+create index if not exists idx_grades_submission_id on public.grades(submission_id);
 create index if not exists idx_announcements_target on public.announcements(target_role, class_id);

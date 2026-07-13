@@ -1,2 +1,0 @@
--- TODO: enable RLS and add policies.
--- Admin: all teachers. Teacher: own profile. Student: limited/no direct access.

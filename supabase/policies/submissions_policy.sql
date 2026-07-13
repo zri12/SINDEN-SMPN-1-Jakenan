@@ -1,2 +1,0 @@
--- TODO: enable RLS and add policies.
--- Bucket note: submission-files stores student uploads. Teacher scope only needs status/catatan in initial UI.

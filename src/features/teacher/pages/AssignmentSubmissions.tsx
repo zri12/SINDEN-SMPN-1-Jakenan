@@ -46,6 +46,8 @@ export function AssignmentSubmissions() {
         className: selected.className,
         subjectId: selected.subjectId ?? "",
         subjectName: selected.subjectName ?? "",
+        assignmentId: selected.assignmentId,
+        submissionId: selected.id,
         semester: "genap",
         gradeType: currentScore.type as any,
         score: Number(currentScore.score),

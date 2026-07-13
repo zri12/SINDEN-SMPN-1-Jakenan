@@ -1,4 +1,4 @@
--- SINDEN 001 - extensions and shared helper functions
+-- SINDEN 001 - extensions and shared helpers
 create extension if not exists "pgcrypto";
 
 create or replace function public.set_updated_at()
