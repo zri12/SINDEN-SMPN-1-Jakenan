@@ -268,6 +268,7 @@ function StudentEditor({
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
+        {mode === "edit" && <Input label="Username Akun" value={form.username ?? ""} onChange={(event) => setForm({ ...form, username: event.target.value })} />}
         <Input label="NISN" value={form.nisn} onChange={(event) => setForm({ ...form, nisn: event.target.value })} required />
         <Input label="NIS / NIPD" value={form.nis} onChange={(event) => setForm({ ...form, nis: event.target.value })} />
         <Input label="Nama Siswa" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} required />

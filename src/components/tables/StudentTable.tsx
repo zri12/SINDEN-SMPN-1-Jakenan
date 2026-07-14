@@ -19,6 +19,7 @@ export function StudentTable({ students, onView, onEdit, onDelete, onResetPasswo
     { key: "nisn", header: "NISN", render: (student) => <span className="font-mono text-xs">{student.nisn || "-"}</span> },
     { key: "nis", header: "NIS / NIPD", render: (student) => <span className="font-mono text-xs">{student.nis || "-"}</span> },
     { key: "name", header: "Nama Siswa", render: (student) => <span className="font-medium text-slate-900">{student.fullName}</span> },
+    { key: "username", header: "Username", render: (student) => <span className="font-medium text-slate-700">{student.username || "-"}</span> },
     { key: "class", header: "Kelas", render: (student) => <span className="rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">{student.className}</span> },
     { key: "gender", header: "Jenis Kelamin", render: (student) => (student.gender === "L" ? "Laki-laki" : "Perempuan") },
     { key: "birth", header: "Tempat/Tanggal Lahir", render: (student) => formatBirth(student) },

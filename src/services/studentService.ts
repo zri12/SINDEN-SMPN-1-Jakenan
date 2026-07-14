@@ -63,6 +63,7 @@ export async function updateStudent(id: string, student: Partial<Student>) {
   const client = requireSupabase();
 
   validateStudent(student);
+  await updateStudentProfile(student);
   const { data, error } = await client.from("students").update(toStudentRow(student)).eq("id", id).select("*, profiles(username, email), classes(id, name)").single();
   if (error) handleSupabaseError(error, "Data siswa gagal diperbarui.");
   return mapStudent(data);
@@ -113,9 +114,26 @@ function toStudentRow(student: Partial<Student>) {
 function validateStudent(student: Partial<Student>) {
   if ("fullName" in student && !student.fullName?.trim()) throw new Error("Nama siswa wajib diisi.");
   if ("nisn" in student && !student.nisn?.trim()) throw new Error("NISN wajib diisi.");
+  if ("username" in student && !student.username?.trim()) throw new Error("Username wajib diisi.");
   if ("classId" in student && !student.classId) throw new Error("Kelas wajib dipilih.");
   if (student.birthDate) {
     const date = new Date(student.birthDate);
     if (Number.isNaN(date.getTime())) throw new Error("Tanggal lahir tidak valid.");
   }
+}
+
+async function updateStudentProfile(student: Partial<Student>) {
+  const client = requireSupabase();
+  if (!student.profileId) return;
+
+  const updates = omitUndefined({
+    full_name: student.fullName?.trim(),
+    username: student.username?.trim(),
+    is_active: student.status ? student.status === "active" : undefined,
+    updated_at: new Date().toISOString()
+  });
+
+  if (Object.keys(updates).length === 0) return;
+  const { error } = await client.from("profiles").update(updates).eq("id", student.profileId);
+  if (error) handleSupabaseError(error, "Profile akun siswa gagal diperbarui.");
 }

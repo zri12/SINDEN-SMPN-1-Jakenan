@@ -22,6 +22,7 @@ export async function createTeacher(teacher: Teacher) {
 export async function updateTeacher(id: string, teacher: Partial<Teacher>) {
   const client = requireSupabase();
 
+  await updateTeacherProfile(teacher);
   const { error } = await client.from("teachers").update(toTeacherRow(teacher)).eq("id", id);
   if (error) handleSupabaseError(error, "Data guru gagal diperbarui.");
   await syncTeacherClasses(id, teacher);
@@ -71,6 +72,23 @@ function toTeacherRow(teacher: Partial<Teacher>) {
     phone: teacher.phone,
     status: teacher.status
   });
+}
+
+async function updateTeacherProfile(teacher: Partial<Teacher>) {
+  const client = requireSupabase();
+  if (!teacher.profileId) return;
+
+  const updates = omitUndefined({
+    full_name: teacher.fullName?.trim(),
+    username: teacher.username?.trim(),
+    phone: teacher.phone?.trim(),
+    is_active: teacher.status ? teacher.status === "active" : undefined,
+    updated_at: new Date().toISOString()
+  });
+
+  if (Object.keys(updates).length === 0) return;
+  const { error } = await client.from("profiles").update(updates).eq("id", teacher.profileId);
+  if (error) handleSupabaseError(error, "Profile akun guru gagal diperbarui.");
 }
 
 async function getTeacherById(id: string) {

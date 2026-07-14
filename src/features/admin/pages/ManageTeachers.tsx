@@ -282,6 +282,7 @@ function TeacherEditor({
       )}
       <Input label="Nama Guru" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} />
       <div className="grid gap-4 sm:grid-cols-2">
+        {mode === "edit" && <Input label="Username Akun" value={form.username ?? ""} onChange={(event) => setForm({ ...form, username: event.target.value })} />}
         <Input label="NIP" value={form.nip ?? ""} onChange={(event) => setForm({ ...form, nip: event.target.value })} />
         <Input label="NUPTK" value={form.nuptk ?? ""} onChange={(event) => setForm({ ...form, nuptk: event.target.value })} />
         <Select label="Jenis Kelamin" value={form.gender ?? "L"} options={[{ value: "L", label: "Laki-laki" }, { value: "P", label: "Perempuan" }]} onChange={(event) => setForm({ ...form, gender: event.target.value as "L" | "P" })} />

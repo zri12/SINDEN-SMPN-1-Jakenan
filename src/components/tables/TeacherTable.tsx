@@ -18,6 +18,7 @@ export function TeacherTable({ teachers, onView, onEdit, onDelete, onResetPasswo
     { key: "nip", header: "NIP", render: (teacher) => <span className="font-mono text-xs">{teacher.nip || "-"}</span> },
     { key: "nuptk", header: "NUPTK", render: (teacher) => <span className="font-mono text-xs">{teacher.nuptk || "-"}</span> },
     { key: "name", header: "Nama Guru", render: (teacher) => <span className="font-medium text-slate-900">{teacher.fullName}</span> },
+    { key: "username", header: "Username", render: (teacher) => <span className="font-medium text-slate-700">{teacher.username || "-"}</span> },
     { key: "gender", header: "Jenis Kelamin", render: (teacher) => teacher.gender === "P" ? "Perempuan" : teacher.gender === "L" ? "Laki-laki" : "-" },
     { key: "subject", header: "Mata Pelajaran", render: (teacher) => teacher.subjectName },
     { key: "classes", header: "Kelas Diajar", render: (teacher) => teacher.classNames.join(", ") },
