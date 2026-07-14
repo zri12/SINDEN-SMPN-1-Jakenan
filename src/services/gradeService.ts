@@ -1,5 +1,5 @@
 import type { Grade } from "@/types/grade";
-import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getGrades() {
   const client = getSupabase();
@@ -25,6 +25,7 @@ export async function createGrade(grade: Grade) {
   if (grade.submissionId) {
     await markSubmissionReviewed(grade.submissionId);
   }
+  clearDataCache();
   return mapGrade(data);
 }
 
@@ -33,6 +34,7 @@ export async function updateGrade(id: string, grade: Partial<Grade>) {
 
   const { data, error } = await client.from("grades").update(toGradeRow(grade)).eq("id", id).select("*, students(full_name), teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Nilai gagal diperbarui.");
+  clearDataCache();
   return mapGrade(data);
 }
 
@@ -41,6 +43,7 @@ export async function deleteGrade(id: string) {
 
   const { error } = await client.from("grades").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Nilai gagal dihapus.");
+  clearDataCache();
   return { id };
 }
 
@@ -90,6 +93,7 @@ async function markSubmissionReviewed(submissionId: string) {
     .update({ status: "reviewed", updated_at: new Date().toISOString() })
     .eq("id", submissionId);
   if (error) handleSupabaseError(error, "Status pengumpulan gagal diperbarui.");
+  clearDataCache();
 }
 
 function mapGradeTypeToDb(type: Grade["gradeType"]) {

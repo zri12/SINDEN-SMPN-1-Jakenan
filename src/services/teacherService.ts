@@ -1,5 +1,5 @@
 import type { Teacher } from "@/types/teacher";
-import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getTeachers() {
   const client = getSupabase();
@@ -16,6 +16,7 @@ export async function createTeacher(teacher: Teacher) {
   const { data, error } = await client.from("teachers").insert(toTeacherRow(teacher)).select("id").single();
   if (error) handleSupabaseError(error, "Data guru gagal disimpan.");
   await syncTeacherClasses(data.id, teacher);
+  clearDataCache();
   return getTeacherById(data.id);
 }
 
@@ -26,6 +27,7 @@ export async function updateTeacher(id: string, teacher: Partial<Teacher>) {
   const { error } = await client.from("teachers").update(toTeacherRow(teacher)).eq("id", id);
   if (error) handleSupabaseError(error, "Data guru gagal diperbarui.");
   await syncTeacherClasses(id, teacher);
+  clearDataCache();
   return getTeacherById(id);
 }
 
@@ -34,6 +36,7 @@ export async function deleteTeacher(id: string) {
 
   const { error } = await client.from("teachers").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Data guru gagal dihapus.");
+  clearDataCache();
   return { id };
 }
 
@@ -89,6 +92,7 @@ async function updateTeacherProfile(teacher: Partial<Teacher>) {
   if (Object.keys(updates).length === 0) return;
   const { error } = await client.from("profiles").update(updates).eq("id", teacher.profileId);
   if (error) handleSupabaseError(error, "Profile akun guru gagal diperbarui.");
+  clearDataCache();
 }
 
 async function getTeacherById(id: string) {
@@ -136,6 +140,7 @@ async function syncTeacherClasses(teacherId: string, teacher: Partial<Teacher>) 
   if (rows.length === 0) return;
   const { error } = await client.from("teacher_classes").insert(rows);
   if (error) handleSupabaseError(error, "Relasi guru, kelas, dan mapel gagal disimpan.");
+  clearDataCache();
 }
 
 function splitNames(value: string) {

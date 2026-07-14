@@ -27,3 +27,18 @@ export function handleSupabaseError(error: unknown, fallbackMessage: string): ne
 export function omitUndefined<T extends Record<string, unknown>>(value: T) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined)) as Partial<T>;
 }
+
+export function clearDataCache() {
+  if (typeof window === "undefined") return;
+
+  try {
+    const keysToRemove: string[] = [];
+    for (let index = 0; index < window.sessionStorage.length; index += 1) {
+      const key = window.sessionStorage.key(index);
+      if (key?.startsWith("sinden:data:")) keysToRemove.push(key);
+    }
+    keysToRemove.forEach((key) => window.sessionStorage.removeItem(key));
+  } catch {
+    // Cache cleanup is best-effort; CRUD operations must not fail because of it.
+  }
+}

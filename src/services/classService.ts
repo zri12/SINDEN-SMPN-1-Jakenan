@@ -1,5 +1,5 @@
 import type { ClassRoom } from "@/types/class";
-import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getClasses() {
   const client = getSupabase();
@@ -19,6 +19,7 @@ export async function createClass(classRoom: ClassRoom) {
     .select()
     .single();
   if (error) handleSupabaseError(error, "Data kelas gagal disimpan.");
+  clearDataCache();
   return mapClass(data);
 }
 
@@ -32,6 +33,7 @@ export async function updateClass(id: string, classRoom: Partial<ClassRoom>) {
     .select()
     .single();
   if (error) handleSupabaseError(error, "Data kelas gagal diperbarui.");
+  clearDataCache();
   return mapClass(data);
 }
 
@@ -40,6 +42,7 @@ export async function deleteClass(id: string) {
 
   const { error } = await client.from("classes").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Data kelas gagal dihapus.");
+  clearDataCache();
   return { id };
 }
 

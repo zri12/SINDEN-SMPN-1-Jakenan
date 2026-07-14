@@ -1,6 +1,6 @@
 import { setCurrentUser } from "@/features/auth/authService";
 import type { AuthUser } from "@/types/auth";
-import { getSupabase, handleSupabaseError } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError } from "./serviceUtils";
 
 export interface TeacherProfileData {
   teacherId: string;
@@ -138,6 +138,7 @@ export async function updateCurrentTeacherProfile(payload: TeacherProfileUpdate)
   }
 
   const updated = await getCurrentTeacherProfile();
+  clearDataCache();
   setCurrentUser({
     id: updated.profileId,
     fullName: updated.fullName,

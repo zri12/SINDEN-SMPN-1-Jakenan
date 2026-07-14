@@ -1,5 +1,5 @@
 import type { Subject } from "@/types/subject";
-import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getSubjects() {
   const client = getSupabase();
@@ -19,6 +19,7 @@ export async function createSubject(subject: Subject) {
     .select()
     .single();
   if (error) handleSupabaseError(error, "Mata pelajaran gagal disimpan.");
+  clearDataCache();
   return mapSubject(data);
 }
 
@@ -32,6 +33,7 @@ export async function updateSubject(id: string, subject: Partial<Subject>) {
     .select()
     .single();
   if (error) handleSupabaseError(error, "Mata pelajaran gagal diperbarui.");
+  clearDataCache();
   return mapSubject(data);
 }
 
@@ -40,6 +42,7 @@ export async function deleteSubject(id: string) {
 
   const { error } = await client.from("subjects").delete().eq("id", id);
   if (error) handleSupabaseError(error, "Mata pelajaran gagal dihapus.");
+  clearDataCache();
   return { id };
 }
 

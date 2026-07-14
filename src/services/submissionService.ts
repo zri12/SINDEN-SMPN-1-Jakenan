@@ -1,6 +1,6 @@
 import type { Submission } from "@/types/submission";
 import { createSignedUrl } from "@/lib/storage";
-import { getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError, omitUndefined, requireSupabase } from "./serviceUtils";
 
 export async function getSubmissions() {
   const client = getSupabase();
@@ -36,6 +36,7 @@ export async function createSubmission(submission: Submission) {
     .select("*, assignments(title, teacher_id, class_id, subject_id, subjects(name, kkm)), students(full_name, class_id, classes(name))")
     .single();
   if (error) handleSupabaseError(error, "Pengumpulan tugas gagal disimpan.");
+  clearDataCache();
   return mapSubmission(data);
 }
 
@@ -44,6 +45,7 @@ export async function updateSubmission(id: string, submission: Partial<Submissio
 
   const { data, error } = await client.from("submissions").update(toSubmissionRow(submission)).eq("id", id).select("*, assignments(title, teacher_id, class_id, subject_id, subjects(name, kkm)), students(full_name, class_id, classes(name))").single();
   if (error) handleSupabaseError(error, "Pengumpulan tugas gagal diperbarui.");
+  clearDataCache();
   return mapSubmission(data);
 }
 

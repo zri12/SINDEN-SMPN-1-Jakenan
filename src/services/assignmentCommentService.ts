@@ -1,5 +1,5 @@
 import { getCurrentStudent } from "@/services/studentService";
-import { getSupabase, handleSupabaseError, requireSupabase } from "./serviceUtils";
+import { clearDataCache, getSupabase, handleSupabaseError, requireSupabase } from "./serviceUtils";
 
 export type AssignmentCommentVisibility = "public" | "private";
 
@@ -45,6 +45,7 @@ export async function createAssignmentComment(assignmentId: string, text: string
     .select()
     .single();
   if (error) handleSupabaseError(error, "Komentar gagal dikirim.");
+  clearDataCache();
   return mapComment(data);
 }
 
