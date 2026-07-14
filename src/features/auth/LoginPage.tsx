@@ -83,28 +83,30 @@ export function LoginPage() {
                 </p>
               )}
 
-              <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-[38px] h-4 w-4 text-slate-400" />
+              <div>
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Username / NISN / NIS / NIP / NUPTK / Gmail</span>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
-                  label="Username / NISN / NIS / NIP / NUPTK / Gmail"
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
-                  placeholder="Masukkan username, NISN, NIS, NIP, NUPTK, atau Gmail"
-                  className="h-12 bg-white pl-10"
+                    placeholder="Username, NISN, NIP, atau Gmail"
+                    className="h-12 bg-white pl-12"
                   required
                 />
+                </div>
               </div>
 
               <div>
                 <span className="mb-1.5 block text-sm font-medium text-slate-700">Password</span>
                 <div className="relative">
-                  <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Masukkan password akun"
-                    className="h-12 bg-white pl-10 pr-10"
+                    className="h-12 bg-white pl-12 pr-10"
                     required
                   />
                   <button

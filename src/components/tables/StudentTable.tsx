@@ -35,7 +35,7 @@ export function StudentTable({ students, onView, onEdit, onDelete, onResetPasswo
 
 function ActionButtons({ onView, onEdit, onDelete, onResetPassword }: { onView: () => void; onEdit: () => void; onDelete: () => void; onResetPassword: () => void }) {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-nowrap gap-1">
       <Button variant="outline" size="sm" aria-label="Detail" onClick={onView}><Eye className="h-3.5 w-3.5" /></Button>
       <Button variant="secondary" size="sm" aria-label="Edit" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /></Button>
       <Button variant="outline" size="sm" aria-label="Reset Password" onClick={onResetPassword}><KeyRound className="h-3.5 w-3.5" /></Button>

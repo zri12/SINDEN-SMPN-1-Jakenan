@@ -27,7 +27,7 @@ export function TeacherTable({ teachers, onView, onEdit, onDelete, onResetPasswo
       key: "actions",
       header: "Aksi",
       render: (teacher) => (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-nowrap gap-1">
           <Button variant="outline" size="sm" aria-label="Detail" onClick={() => onView?.(teacher)}><Eye className="h-3.5 w-3.5" /></Button>
           <Button variant="secondary" size="sm" aria-label="Edit" onClick={() => onEdit?.(teacher)}><Pencil className="h-3.5 w-3.5" /></Button>
           <Button variant="outline" size="sm" aria-label="Reset Password" onClick={() => onResetPassword?.(teacher)}><KeyRound className="h-3.5 w-3.5" /></Button>
