@@ -8,6 +8,7 @@ import { FormAlert } from "@/components/common/FormAlert";
 import { Input } from "@/components/common/Input";
 import { Loading } from "@/components/common/Loading";
 import { Modal } from "@/components/common/Modal";
+import { PasswordInput } from "@/components/common/PasswordInput";
 import { SearchBar } from "@/components/common/SearchBar";
 import { Select } from "@/components/common/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -415,8 +416,8 @@ function ResetPasswordPanel({ name, identifier, password, confirm, error, succes
       </div>
       <FormAlert message={error} />
       <FormAlert message={success} tone="success" />
-      <Input label="Password Baru" type="password" value={password} onChange={(event) => onChange({ password: event.target.value, confirm })} />
-      <Input label="Konfirmasi Password" type="password" value={confirm} onChange={(event) => onChange({ password, confirm: event.target.value })} />
+      <PasswordInput label="Password Baru" value={password} onChange={(event) => onChange({ password: event.target.value, confirm })} />
+      <PasswordInput label="Konfirmasi Password" value={confirm} onChange={(event) => onChange({ password, confirm: event.target.value })} />
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>
         <Button onClick={onSave} disabled={isSaving}>{isSaving ? "Menyimpan..." : "Simpan Password"}</Button>
