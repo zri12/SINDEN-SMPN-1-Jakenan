@@ -5,6 +5,7 @@ import { Card } from "@/components/common/Card";
 import { ConfirmDelete } from "@/components/common/ConfirmDelete";
 import { DetailGrid } from "@/components/common/DetailGrid";
 import { FilterDropdown } from "@/components/common/FilterDropdown";
+import { FormAlert } from "@/components/common/FormAlert";
 import { Input } from "@/components/common/Input";
 import { Loading } from "@/components/common/Loading";
 import { Modal } from "@/components/common/Modal";
@@ -254,7 +255,7 @@ function StudentEditor({
 
   return (
     <div className="space-y-4">
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <FormAlert message={error} />
       {mode === "create" && (
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
           <h3 className="font-semibold text-blue-950">Akun Login Siswa</h3>
@@ -269,6 +270,7 @@ function StudentEditor({
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         {mode === "edit" && <Input label="Username Akun" value={form.username ?? ""} onChange={(event) => setForm({ ...form, username: event.target.value })} />}
+        {mode === "edit" && <Input label="Email / Gmail" type="email" value={form.email ?? ""} onChange={(event) => setForm({ ...form, email: event.target.value })} />}
         <Input label="NISN" value={form.nisn} onChange={(event) => setForm({ ...form, nisn: event.target.value })} required />
         <Input label="NIS / NIPD" value={form.nis} onChange={(event) => setForm({ ...form, nis: event.target.value })} />
         <Input label="Nama Siswa" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} required />
@@ -296,8 +298,8 @@ function ResetPasswordPanel({ name, identifier, password, confirm, error, succes
         <p className="font-semibold">{name}</p>
         <p>Identifier login: {identifier}</p>
       </div>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {success && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{success}</p>}
+      <FormAlert message={error} />
+      <FormAlert message={success} tone="success" />
       <Input label="Password Baru" type="password" value={password} onChange={(event) => onChange({ password: event.target.value, confirm })} />
       <Input label="Konfirmasi Password" type="password" value={confirm} onChange={(event) => onChange({ password, confirm: event.target.value })} />
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

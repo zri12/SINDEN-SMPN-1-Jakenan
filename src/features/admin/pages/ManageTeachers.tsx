@@ -4,6 +4,7 @@ import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { ConfirmDelete } from "@/components/common/ConfirmDelete";
 import { DetailGrid } from "@/components/common/DetailGrid";
+import { FormAlert } from "@/components/common/FormAlert";
 import { Input } from "@/components/common/Input";
 import { Loading } from "@/components/common/Loading";
 import { Modal } from "@/components/common/Modal";
@@ -267,7 +268,7 @@ function TeacherEditor({
 
   return (
     <div className="space-y-4">
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <FormAlert message={error} />
       {mode === "create" && (
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
           <h3 className="font-semibold text-blue-950">Akun Login Guru</h3>
@@ -289,7 +290,7 @@ function TeacherEditor({
         <Input label="Status Kepegawaian" value={form.employmentStatus ?? ""} onChange={(event) => setForm({ ...form, employmentStatus: event.target.value })} placeholder="PNS / PPPK / Honorer" />
         <Input label="Jenis PTK" value={form.teacherType ?? ""} onChange={(event) => setForm({ ...form, teacherType: event.target.value })} placeholder="Guru Mata Pelajaran" />
         <Input label="No HP" value={form.phone ?? ""} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
-        <Input label="Email / Gmail" value={form.email ?? ""} disabled className="text-slate-400" />
+        <Input label="Email / Gmail" type="email" value={form.email ?? ""} onChange={(event) => setForm({ ...form, email: event.target.value })} />
         <Select label="Status Akun" value={form.status} options={[{ value: "active", label: "Aktif" }, { value: "inactive", label: "Tidak Aktif" }]} onChange={(event) => setForm({ ...form, status: event.target.value as Teacher["status"] })} />
       </div>
 
@@ -332,8 +333,8 @@ function ResetPasswordPanel({ name, identifier, password, confirm, error, succes
         <p className="font-semibold">{name}</p>
         <p>Identifier login: {identifier}</p>
       </div>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {success && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{success}</p>}
+      <FormAlert message={error} />
+      <FormAlert message={success} tone="success" />
       <Input label="Password Baru" type="password" value={password} onChange={(event) => onChange({ password: event.target.value, confirm })} />
       <Input label="Konfirmasi Password" type="password" value={confirm} onChange={(event) => onChange({ password, confirm: event.target.value })} />
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

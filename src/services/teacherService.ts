@@ -79,11 +79,15 @@ function toTeacherRow(teacher: Partial<Teacher>) {
 
 async function updateTeacherProfile(teacher: Partial<Teacher>) {
   const client = requireSupabase();
-  if (!teacher.profileId) return;
+  if (!teacher.profileId) {
+    if (teacher.username?.trim()) throw new Error("Guru ini belum punya akun login. Tambahkan guru baru dengan username dan password, atau jalankan SQL reset data terbaru.");
+    return;
+  }
 
   const updates = omitUndefined({
     full_name: teacher.fullName?.trim(),
     username: teacher.username?.trim(),
+    email: teacher.email?.trim(),
     phone: teacher.phone?.trim(),
     is_active: teacher.status ? teacher.status === "active" : undefined,
     updated_at: new Date().toISOString()
@@ -132,8 +136,8 @@ async function syncTeacherClasses(teacherId: string, teacher: Partial<Teacher>) 
       teacher_id: teacherId,
       class_id: classRoom.id,
       subject_id: subject.id,
-      academic_year: "2025/2026",
-      semester: "genap"
+      academic_year: "2026/2027",
+      semester: "ganjil"
     }))
   );
 

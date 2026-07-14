@@ -127,11 +127,15 @@ function validateStudent(student: Partial<Student>) {
 
 async function updateStudentProfile(student: Partial<Student>) {
   const client = requireSupabase();
-  if (!student.profileId) return;
+  if (!student.profileId) {
+    if (student.username?.trim()) throw new Error("Siswa ini belum punya akun login. Tambahkan siswa baru dengan username dan password, atau jalankan SQL reset data terbaru.");
+    return;
+  }
 
   const updates = omitUndefined({
     full_name: student.fullName?.trim(),
     username: student.username?.trim(),
+    email: student.email?.trim(),
     is_active: student.status ? student.status === "active" : undefined,
     updated_at: new Date().toISOString()
   });
