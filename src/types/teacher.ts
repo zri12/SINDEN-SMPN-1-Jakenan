@@ -1,3 +1,5 @@
+import type { TeachingRelation } from "./teachingRelation";
+
 export interface Teacher {
   id: string;
   profileId?: string;
@@ -11,6 +13,7 @@ export interface Teacher {
   email?: string;
   subjectName: string;
   classNames: string[];
+  teachingRelations?: TeachingRelation[];
   username: string;
   status: "active" | "inactive";
 }

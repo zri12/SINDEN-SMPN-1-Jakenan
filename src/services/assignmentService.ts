@@ -23,6 +23,7 @@ export async function getAssignments() {
 export async function createAssignment(assignment: Assignment) {
   const client = requireSupabase();
 
+  await validateTeacherCanCreateAssignment(assignment.teacherId, assignment.classId, assignment.subjectId);
   const { data, error } = await client.from("assignments").insert(toAssignmentRow(assignment)).select("*, teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Tugas gagal disimpan.");
   clearDataCache();
@@ -32,10 +33,26 @@ export async function createAssignment(assignment: Assignment) {
 export async function updateAssignment(id: string, assignment: Partial<Assignment>) {
   const client = requireSupabase();
 
+  if (assignment.teacherId && assignment.classId && assignment.subjectId) {
+    await validateTeacherCanCreateAssignment(assignment.teacherId, assignment.classId, assignment.subjectId);
+  }
   const { data, error } = await client.from("assignments").update(toAssignmentRow(assignment)).eq("id", id).select("*, teachers(full_name), classes(name), subjects(name)").single();
   if (error) handleSupabaseError(error, "Tugas gagal diperbarui.");
   clearDataCache();
   return mapAssignment(data);
+}
+
+export async function validateTeacherCanCreateAssignment(teacherId: string, classId: string, subjectId: string) {
+  const client = requireSupabase();
+  const { data, error } = await client
+    .from("teacher_classes")
+    .select("id")
+    .eq("teacher_id", teacherId)
+    .eq("class_id", classId)
+    .eq("subject_id", subjectId)
+    .limit(1);
+  if (error) handleSupabaseError(error, "Relasi mengajar guru gagal divalidasi.");
+  if (!data?.length) throw new Error("Kelas atau mata pelajaran tidak sesuai dengan data mengajar guru.");
 }
 
 export async function deleteAssignment(id: string) {

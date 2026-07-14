@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Mail, Phone, School, UserCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { DetailGrid } from "@/components/common/DetailGrid";
 import { Input } from "@/components/common/Input";
-import { Select } from "@/components/common/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { useClasses } from "@/hooks/useClasses";
-import { useSubjects } from "@/hooks/useSubjects";
 import { getCurrentTeacherProfile, updateCurrentTeacherProfile } from "@/services/profileService";
 import type { TeacherProfileData, TeacherProfileUpdate } from "@/services/profileService";
 
@@ -38,8 +35,6 @@ const emptyProfile: TeacherProfileData = {
 };
 
 export function TeacherProfile() {
-  const { classes } = useClasses();
-  const { subjects } = useSubjects();
   const [profile, setProfile] = useState<TeacherProfileData>(emptyProfile);
   const [draft, setDraft] = useState<TeacherProfileForm>(toDraft(emptyProfile));
   const [isEditing, setIsEditing] = useState(false);
@@ -68,29 +63,8 @@ export function TeacherProfile() {
     };
   }, []);
 
-  const academicYearOptions = useMemo(() => {
-    const years = Array.from(new Set([profile.academicYear, ...classes.map((classRoom) => classRoom.academicYear)].filter(Boolean)));
-    return years.map((year) => ({ value: year, label: year }));
-  }, [classes, profile.academicYear]);
-
-  const selectedSubjectNames = profile.subjectNames.length ? profile.subjectNames : subjects.filter((subject) => profile.subjectIds.includes(subject.id)).map((subject) => subject.name);
-  const selectedClassNames = profile.classNames.length ? profile.classNames : classes.filter((classRoom) => profile.classIds.includes(classRoom.id)).map((classRoom) => classRoom.name);
-
-  const toggleClass = (classId: string) => {
-    const exists = draft.classIds.includes(classId);
-    setDraft({
-      ...draft,
-      classIds: exists ? draft.classIds.filter((item) => item !== classId) : [...draft.classIds, classId]
-    });
-  };
-
-  const toggleSubject = (subjectId: string) => {
-    const exists = draft.subjectIds.includes(subjectId);
-    setDraft({
-      ...draft,
-      subjectIds: exists ? draft.subjectIds.filter((item) => item !== subjectId) : [...draft.subjectIds, subjectId]
-    });
-  };
+  const selectedSubjectNames = profile.subjectNames;
+  const selectedClassNames = profile.classNames;
 
   const saveProfile = async () => {
     setIsSaving(true);
@@ -99,11 +73,7 @@ export function TeacherProfile() {
       const updated = await updateCurrentTeacherProfile({
         fullName: draft.fullName,
         username: draft.username,
-        phone: draft.phone,
-        subjectIds: draft.subjectIds,
-        classIds: draft.classIds,
-        academicYear: draft.academicYear,
-        semester: draft.semester
+        phone: draft.phone
       });
       setProfile(updated);
       setDraft(toDraft(updated));
@@ -166,65 +136,10 @@ export function TeacherProfile() {
                 <Input label="Username" value={draft.username} onChange={(event) => setDraft({ ...draft, username: event.target.value })} />
                 <Input label="Gmail Guru" type="email" value={draft.email} disabled />
                 <Input label="No HP" value={draft.phone} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} />
-                <Select
-                  label="Tahun Ajaran"
-                  value={draft.academicYear}
-                  options={academicYearOptions}
-                  onChange={(event) => setDraft({ ...draft, academicYear: event.target.value })}
-                />
-                <Select
-                  label="Semester"
-                  value={draft.semester}
-                  options={[
-                    { value: "ganjil", label: "Semester 1" },
-                    { value: "genap", label: "Semester 2" }
-                  ]}
-                  onChange={(event) => setDraft({ ...draft, semester: event.target.value as "ganjil" | "genap" })}
-                />
               </div>
 
-              <div className="mt-5">
-                <p className="mb-2 text-sm font-medium text-slate-700">Mata Pelajaran Diampu</p>
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {subjects.map((subject) => {
-                    const active = draft.subjectIds.includes(subject.id);
-                    return (
-                      <button
-                        key={subject.id}
-                        type="button"
-                        onClick={() => toggleSubject(subject.id)}
-                        className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                          active ? "border-blue-300 bg-blue-50 font-semibold text-blue-700" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-blue-200"
-                        }`}
-                      >
-                        {subject.name}
-                        <span className="ml-2 text-xs text-slate-400">KKM {subject.kkm}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <p className="mb-2 text-sm font-medium text-slate-700">Kelas Diajar</p>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {classes.map((classRoom) => {
-                    const active = draft.classIds.includes(classRoom.id);
-                    return (
-                      <button
-                        key={classRoom.id}
-                        type="button"
-                        onClick={() => toggleClass(classRoom.id)}
-                        className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                          active ? "border-blue-300 bg-blue-50 font-semibold text-blue-700" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-blue-200"
-                        }`}
-                      >
-                        {classRoom.name}
-                        <span className="ml-2 text-xs text-slate-400">Kelas {classRoom.gradeLevel}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                Kelas dan mata pelajaran diampu dikelola oleh admin. Hubungi admin jika relasi mengajar perlu diubah.
               </div>
             </div>
           ) : (

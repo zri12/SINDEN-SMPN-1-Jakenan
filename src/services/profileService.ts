@@ -27,10 +27,10 @@ export interface TeacherProfileUpdate {
   fullName: string;
   username: string;
   phone: string;
-  subjectIds: string[];
-  classIds: string[];
-  academicYear: string;
-  semester: "ganjil" | "genap";
+  subjectIds?: string[];
+  classIds?: string[];
+  academicYear?: string;
+  semester?: "ganjil" | "genap";
 }
 
 export async function getCurrentTeacherProfile(): Promise<TeacherProfileData> {
@@ -118,24 +118,6 @@ export async function updateCurrentTeacherProfile(payload: TeacherProfileUpdate)
     })
     .eq("id", teacherId);
   if (teacherError) handleSupabaseError(teacherError, "Data guru gagal diperbarui.");
-
-  const { error: deleteError } = await client.from("teacher_classes").delete().eq("teacher_id", teacherId);
-  if (deleteError) handleSupabaseError(deleteError, "Relasi kelas dan mapel lama gagal dihapus.");
-
-  const rows = payload.classIds.flatMap((classId) =>
-    payload.subjectIds.map((subjectId) => ({
-      teacher_id: teacherId,
-      class_id: classId,
-      subject_id: subjectId,
-      academic_year: payload.academicYear,
-      semester: payload.semester
-    }))
-  );
-
-  if (rows.length > 0) {
-    const { error: insertError } = await client.from("teacher_classes").insert(rows);
-    if (insertError) handleSupabaseError(insertError, "Relasi kelas dan mapel baru gagal disimpan.");
-  }
 
   const updated = await getCurrentTeacherProfile();
   clearDataCache();

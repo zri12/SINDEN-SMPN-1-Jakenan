@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -20,6 +20,7 @@ import { createTeacher, deleteTeacher as removeTeacher, updateTeacher } from "@/
 import type { ClassRoom } from "@/types/class";
 import type { Subject } from "@/types/subject";
 import type { Teacher } from "@/types/teacher";
+import type { TeachingRelation } from "@/types/teachingRelation";
 
 type ModalMode = "create" | "view" | "edit" | "delete" | "reset";
 
@@ -63,6 +64,7 @@ export function ManageTeachers() {
     setIsSaving(true);
     setActionError("");
     try {
+      validateTeachingRelations(form.teachingRelations ?? []);
       if (modalMode === "edit" && selected) {
         await updateTeacher(selected.id, form);
       } else {
@@ -226,7 +228,49 @@ export function ManageTeachers() {
 }
 
 function emptyTeacher(classRoom?: ClassRoom, subject?: Subject): Teacher {
-  return { id: "", nip: "", nuptk: "", fullName: "", gender: "L", employmentStatus: "", teacherType: "", phone: "", email: "", subjectName: subject?.name ?? "", classNames: classRoom?.name ? [classRoom.name] : [], username: "", status: "active" };
+  const relation = classRoom && subject ? [emptyRelation(classRoom, subject)] : [];
+  return {
+    id: "",
+    nip: "",
+    nuptk: "",
+    fullName: "",
+    gender: "L",
+    employmentStatus: "",
+    teacherType: "",
+    phone: "",
+    email: "",
+    subjectName: subject?.name ?? "",
+    classNames: classRoom?.name ? [classRoom.name] : [],
+    teachingRelations: relation,
+    username: "",
+    status: "active"
+  };
+}
+
+function emptyRelation(classRoom?: ClassRoom, subject?: Subject): TeachingRelation {
+  return {
+    teacherId: "",
+    classId: classRoom?.id ?? "",
+    className: classRoom?.name ?? "",
+    subjectId: subject?.id ?? "",
+    subjectName: subject?.name ?? "",
+    academicYear: classRoom?.academicYear ?? "2026/2027",
+    semester: "ganjil",
+    studentCount: 0
+  };
+}
+
+function validateTeachingRelations(relations: TeachingRelation[]) {
+  if (relations.length === 0) throw new Error("Relasi mengajar wajib diisi minimal satu baris.");
+  const seen = new Set<string>();
+  relations.forEach((relation) => {
+    if (!relation.classId || !relation.subjectId || !relation.academicYear || !relation.semester) {
+      throw new Error("Semua relasi mengajar wajib memilih kelas, mapel, tahun ajaran, dan semester.");
+    }
+    const key = `${relation.classId}-${relation.subjectId}-${relation.academicYear}-${relation.semester}`;
+    if (seen.has(key)) throw new Error("Relasi mengajar tidak boleh duplikat.");
+    seen.add(key);
+  });
 }
 
 function TeacherEditor({
@@ -254,16 +298,25 @@ function TeacherEditor({
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const selectedSubjects = splitNames(form.subjectName);
+  const relations = form.teachingRelations?.length ? form.teachingRelations : [];
 
-  const toggleSubject = (name: string) => {
-    const next = selectedSubjects.includes(name) ? selectedSubjects.filter((item) => item !== name) : [...selectedSubjects, name];
-    setForm({ ...form, subjectName: next.join(", ") });
+  const setRelations = (next: TeachingRelation[]) => {
+    const classNames = Array.from(new Set(next.map((relation) => relation.className).filter(Boolean)));
+    const subjectNames = Array.from(new Set(next.map((relation) => relation.subjectName).filter(Boolean)));
+    setForm({ ...form, teachingRelations: next, classNames, subjectName: subjectNames.join(", ") || "-" });
   };
 
-  const toggleClass = (name: string) => {
-    const next = form.classNames.includes(name) ? form.classNames.filter((item) => item !== name) : [...form.classNames, name];
-    setForm({ ...form, classNames: next });
+  const updateRelation = (index: number, updates: Partial<TeachingRelation>) => {
+    const next = relations.map((relation, relationIndex) => relationIndex === index ? { ...relation, ...updates } : relation);
+    setRelations(next);
+  };
+
+  const addRelation = () => {
+    setRelations([...relations, emptyRelation(classes[0], subjects[0])]);
+  };
+
+  const removeRelation = (index: number) => {
+    setRelations(relations.filter((_, relationIndex) => relationIndex !== index));
   };
 
   return (
@@ -294,26 +347,53 @@ function TeacherEditor({
         <Select label="Status Akun" value={form.status} options={[{ value: "active", label: "Aktif" }, { value: "inactive", label: "Tidak Aktif" }]} onChange={(event) => setForm({ ...form, status: event.target.value as Teacher["status"] })} />
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-slate-700">Mata Pelajaran</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {subjects.map((subject) => (
-            <label key={subject.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
-              <input type="checkbox" checked={selectedSubjects.includes(subject.name)} onChange={() => toggleSubject(subject.name)} />
-              {subject.name}
-            </label>
-          ))}
+      <div className="rounded-xl border border-slate-200 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Relasi Mengajar</p>
+            <p className="mt-1 text-sm text-slate-500">Atur per baris agar tidak membuat kombinasi kelas dan mapel yang salah.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={addRelation} type="button">
+            <Plus className="h-4 w-4" />Tambah Relasi
+          </Button>
         </div>
-      </div>
-
-      <div>
-        <p className="mb-2 text-sm font-medium text-slate-700">Kelas Diajar</p>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {classes.map((classRoom) => (
-            <label key={classRoom.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
-              <input type="checkbox" checked={form.classNames.includes(classRoom.name)} onChange={() => toggleClass(classRoom.name)} />
-              {classRoom.name}
-            </label>
+        <div className="mt-4 space-y-3">
+          {relations.length === 0 && (
+            <p className="rounded-lg bg-slate-50 px-3 py-3 text-sm text-slate-500">Belum ada relasi. Tambahkan kelas dan mata pelajaran yang diajar guru.</p>
+          )}
+          {relations.map((relation, index) => (
+            <div key={`${relation.id ?? "new"}-${index}`} className="grid gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 lg:grid-cols-[1fr_1fr_150px_130px_auto]">
+              <Select
+                label="Kelas"
+                value={relation.classId}
+                options={[{ value: "", label: "Pilih kelas" }, ...classes.map((classRoom) => ({ value: classRoom.id, label: classRoom.name }))]}
+                onChange={(event) => {
+                  const classRoom = classes.find((item) => item.id === event.target.value);
+                  updateRelation(index, { classId: event.target.value, className: classRoom?.name ?? "", academicYear: classRoom?.academicYear ?? relation.academicYear });
+                }}
+              />
+              <Select
+                label="Mapel"
+                value={relation.subjectId}
+                options={[{ value: "", label: "Pilih mapel" }, ...subjects.map((subject) => ({ value: subject.id, label: subject.name }))]}
+                onChange={(event) => {
+                  const subject = subjects.find((item) => item.id === event.target.value);
+                  updateRelation(index, { subjectId: event.target.value, subjectName: subject?.name ?? "" });
+                }}
+              />
+              <Input label="Tahun Ajaran" value={relation.academicYear} onChange={(event) => updateRelation(index, { academicYear: event.target.value })} />
+              <Select
+                label="Semester"
+                value={relation.semester}
+                options={[{ value: "ganjil", label: "Ganjil" }, { value: "genap", label: "Genap" }]}
+                onChange={(event) => updateRelation(index, { semester: event.target.value as TeachingRelation["semester"] })}
+              />
+              <div className="flex items-end">
+                <Button variant="danger" size="sm" onClick={() => removeRelation(index)} type="button" className="w-full lg:w-auto">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -343,8 +423,4 @@ function ResetPasswordPanel({ name, identifier, password, confirm, error, succes
       </div>
     </div>
   );
-}
-
-function splitNames(value: string) {
-  return value.split(",").map((item) => item.trim()).filter(Boolean);
 }

@@ -120,7 +120,6 @@ function ClassEditor({ form, setForm, error, isSaving, onCancel, onSave }: { for
       <div className="grid gap-4 sm:grid-cols-2">
         <Select label="Tingkat" value={String(form.gradeLevel)} options={[7, 8, 9].map((value) => ({ value: String(value), label: `Kelas ${value}` }))} onChange={(event) => setForm({ ...form, gradeLevel: Number(event.target.value) as 7 | 8 | 9 })} />
         <Input label="Tahun Ajaran" value={form.academicYear} onChange={(event) => setForm({ ...form, academicYear: event.target.value })} />
-        <Input label="Jumlah Siswa" type="number" min={0} value={form.studentCount} onChange={(event) => setForm({ ...form, studentCount: Number(event.target.value) })} />
       </div>
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onCancel} disabled={isSaving}>Batal</Button>

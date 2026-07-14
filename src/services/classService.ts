@@ -15,7 +15,7 @@ export async function createClass(classRoom: ClassRoom) {
 
   const { data, error } = await client
     .from("classes")
-    .insert({ name: classRoom.name, grade_level: classRoom.gradeLevel, academic_year: classRoom.academicYear, student_count: classRoom.studentCount, is_active: true })
+    .insert({ name: classRoom.name, grade_level: classRoom.gradeLevel, academic_year: classRoom.academicYear, is_active: true })
     .select()
     .single();
   if (error) handleSupabaseError(error, "Data kelas gagal disimpan.");
@@ -28,7 +28,7 @@ export async function updateClass(id: string, classRoom: Partial<ClassRoom>) {
 
   const { data, error } = await client
     .from("classes")
-    .update(omitUndefined({ name: classRoom.name, grade_level: classRoom.gradeLevel, academic_year: classRoom.academicYear, student_count: classRoom.studentCount }))
+    .update(omitUndefined({ name: classRoom.name, grade_level: classRoom.gradeLevel, academic_year: classRoom.academicYear }))
     .eq("id", id)
     .select()
     .single();

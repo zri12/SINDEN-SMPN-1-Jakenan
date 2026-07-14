@@ -10,12 +10,11 @@ import { Select } from "@/components/common/Select";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AssignmentTable } from "@/components/tables/AssignmentTable";
 import { useAssignments } from "@/hooks/useAssignments";
-import { useClasses } from "@/hooks/useClasses";
-import { useSubjects } from "@/hooks/useSubjects";
 import { uploadAssignmentFile } from "@/lib/storage";
 import { createAssignment, deleteAssignment, updateAssignment } from "@/services/assignmentService";
-import { getCurrentTeacherProfile } from "@/services/profileService";
+import { getCurrentTeacher, getCurrentTeacherTeachingRelations } from "@/services/teacherService";
 import type { Assignment } from "@/types/assignment";
+import type { TeachingRelation } from "@/types/teachingRelation";
 import { formatDate } from "@/utils/formatDate";
 
 interface AssignmentDraft {
@@ -44,9 +43,8 @@ const emptyDraft: AssignmentDraft = {
 
 export function TeacherAssignments() {
   const { assignments, refetch } = useAssignments();
-  const { classes } = useClasses();
-  const { subjects } = useSubjects();
   const [teacherId, setTeacherId] = useState("");
+  const [relations, setRelations] = useState<TeachingRelation[]>([]);
   const [draft, setDraft] = useState<AssignmentDraft>(emptyDraft);
   const [editing, setEditing] = useState<Assignment | null>(null);
   const [viewing, setViewing] = useState<Assignment | null>(null);
@@ -56,17 +54,45 @@ export function TeacherAssignments() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void getCurrentTeacherProfile().then((profile) => setTeacherId(profile.teacherId)).catch(() => setTeacherId(""));
+    let active = true;
+    Promise.all([getCurrentTeacher(), getCurrentTeacherTeachingRelations()])
+      .then(([teacher, items]) => {
+        if (!active) return;
+        setTeacherId(teacher.id);
+        setRelations(items);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setTeacherId("");
+        setRelations([]);
+        setError(err instanceof Error ? err.message : "Data guru gagal dimuat.");
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const classOptions = useMemo(() => classes.map((item) => ({ value: item.id, label: item.name })), [classes]);
-  const subjectOptions = useMemo(() => subjects.map((item) => ({ value: item.id, label: `${item.name} (KKM ${item.kkm})` })), [subjects]);
+  const classOptions = useMemo(() => {
+    const byClass = new Map<string, TeachingRelation>();
+    relations.forEach((relation) => {
+      if (!byClass.has(relation.classId)) byClass.set(relation.classId, relation);
+    });
+    return Array.from(byClass.values()).map((item) => ({ value: item.classId, label: item.className }));
+  }, [relations]);
+  const subjectOptions = useMemo(() => {
+    return relations
+      .filter((relation) => relation.classId === draft.classId)
+      .map((item) => ({ value: item.subjectId, label: item.subjectName }));
+  }, [relations, draft.classId]);
+  const teacherAssignments = useMemo(() => assignments.filter((assignment) => assignment.teacherId === teacherId), [assignments, teacherId]);
 
   const openCreate = () => {
+    const firstClassId = classOptions[0]?.value ?? "";
+    const firstSubjectId = relations.find((relation) => relation.classId === firstClassId)?.subjectId ?? "";
     setDraft({
       ...emptyDraft,
-      classId: classes[0]?.id ?? "",
-      subjectId: subjects[0]?.id ?? ""
+      classId: firstClassId,
+      subjectId: firstSubjectId
     });
     setEditing(null);
     setError("");
@@ -99,6 +125,11 @@ export function TeacherAssignments() {
       setError("Judul, kelas, mata pelajaran, tanggal publish, dan deadline wajib diisi.");
       return;
     }
+    const relation = relations.find((item) => item.classId === draft.classId && item.subjectId === draft.subjectId);
+    if (!relation) {
+      setError("Kelas atau mata pelajaran tidak sesuai dengan data mengajar guru.");
+      return;
+    }
 
     setIsSaving(true);
     setError("");
@@ -108,9 +139,9 @@ export function TeacherAssignments() {
         teacherId,
         teacherName: editing?.teacherName ?? "",
         classId: draft.classId,
-        className: classes.find((item) => item.id === draft.classId)?.name ?? "",
+        className: relation.className,
         subjectId: draft.subjectId,
-        subjectName: subjects.find((item) => item.id === draft.subjectId)?.name ?? "",
+        subjectName: relation.subjectName,
         title: draft.title.trim(),
         description: draft.description.trim(),
         linkUrl: draft.linkUrl.trim() || undefined,
@@ -155,10 +186,14 @@ export function TeacherAssignments() {
       <PageHeader
         title="Tugas"
         description="Buat tugas, jadwalkan publish, upload file tugas, atau tambahkan link."
-        actions={<Button onClick={openCreate}><Plus className="h-4 w-4" />Buat Tugas</Button>}
+        actions={<Button onClick={openCreate} disabled={relations.length === 0}><Plus className="h-4 w-4" />Buat Tugas</Button>}
       />
       {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
-      <Card><AssignmentTable assignments={assignments} showActions onView={setViewing} onEdit={openEdit} onDelete={setDeleting} /></Card>
+      {relations.length === 0 ? (
+        <Card><p className="text-sm text-slate-600">Data kelas dan mata pelajaran yang diajar belum diatur oleh admin.</p></Card>
+      ) : (
+        <Card><AssignmentTable assignments={teacherAssignments} showActions onView={setViewing} onEdit={openEdit} onDelete={setDeleting} /></Card>
+      )}
 
       {formOpen && (
         <Modal title={editing ? "Edit Tugas" : "Buat Tugas"} onClose={() => setFormOpen(false)}>
@@ -174,7 +209,11 @@ export function TeacherAssignments() {
               />
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Select label="Kelas" value={draft.classId} options={[{ value: "", label: "Pilih kelas" }, ...classOptions]} onChange={(event) => setDraft({ ...draft, classId: event.target.value })} />
+              <Select label="Kelas" value={draft.classId} options={[{ value: "", label: "Pilih kelas" }, ...classOptions]} onChange={(event) => {
+                const classId = event.target.value;
+                const subjectId = relations.find((relation) => relation.classId === classId)?.subjectId ?? "";
+                setDraft({ ...draft, classId, subjectId });
+              }} />
               <Select label="Mata Pelajaran" value={draft.subjectId} options={[{ value: "", label: "Pilih mapel" }, ...subjectOptions]} onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })} />
               <Input label="Tanggal & Jam Publish" type="datetime-local" value={draft.publishAt} onChange={(event) => setDraft({ ...draft, publishAt: event.target.value })} />
               <Input label="Deadline" type="datetime-local" value={draft.deadline} onChange={(event) => setDraft({ ...draft, deadline: event.target.value })} />
