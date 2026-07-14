@@ -1,4 +1,4 @@
-import { requireSupabase } from "./serviceUtils";
+import { clearDataCache, handleSupabaseError, requireSupabase } from "./serviceUtils";
 
 export interface CreateAccountPayload {
   role: "teacher" | "student";
@@ -17,15 +17,27 @@ export async function createUserAccount(payload: CreateAccountPayload) {
   if (!payload.username.trim() && !payload.fallbackIdentifier.trim()) throw new Error("Username atau identifier wajib diisi.");
   if (payload.password.length < 8) throw new Error("Password minimal 8 karakter");
 
-  const { data, error } = await client.functions.invoke("admin-create-account", {
-    body: payload
+  const { data, error } = await client.rpc("admin_create_account", {
+    p_role: payload.role,
+    p_full_name: payload.fullName,
+    p_username: payload.username,
+    p_email: payload.email || null,
+    p_fallback_identifier: payload.fallbackIdentifier,
+    p_password: payload.password,
+    p_phone: payload.phone || null
   });
 
-  if (error) throw new Error(error.message || "Akun login gagal dibuat.");
-  if (data?.error) throw new Error(String(data.error));
-  if (!data?.profileId) throw new Error("Akun dibuat tetapi profile_id tidak diterima.");
+  if (error) handleSupabaseError(error, "Akun login gagal dibuat.");
 
-  return data as { profileId: string; email: string; username: string };
+  const result = Array.isArray(data) ? data[0] : data;
+  if (!result?.profile_id) throw new Error("Akun dibuat tetapi profile_id tidak diterima.");
+  clearDataCache();
+
+  return {
+    profileId: String(result.profile_id),
+    email: String(result.email),
+    username: String(result.username)
+  };
 }
 
 export async function resetUserPassword(profileId: string, password: string) {
@@ -34,17 +46,12 @@ export async function resetUserPassword(profileId: string, password: string) {
   if (!profileId) throw new Error("Profile user tidak ditemukan.");
   if (password.length < 8) throw new Error("Password minimal 8 karakter");
 
-  const { data, error } = await client.functions.invoke("admin-reset-password", {
-    body: { profileId, password }
+  const { error } = await client.rpc("admin_reset_user_password", {
+    p_profile_id: profileId,
+    p_password: password
   });
 
-  if (error) {
-    throw new Error(error.message || "Password gagal diperbarui.");
-  }
-
-  if (data?.error) {
-    throw new Error(String(data.error));
-  }
-
-  return data;
+  if (error) handleSupabaseError(error, "Password gagal diperbarui.");
+  clearDataCache();
+  return { ok: true };
 }
